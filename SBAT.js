@@ -1,4 +1,4 @@
-import { Octokit } from "https://esm.sh/octokit@2.1.0";
+//import { Octokit } from "https://esm.sh/octokit@2.1.0";
 
 let inputData = ['This movie sucks.', 'I loved it!', 'A waste of time.',
                 'Truly awful', 'Most hilarious movie ever'];
@@ -60,6 +60,7 @@ wholeDocumentSwitch.checked = false;
 multilabelSwitch.checked = false;
 localStorageSwitch.checked = false;
 downloadArea.hidden = true;
+authenticationArea.hidden = true;
 
 if (localStorage.getItem('SBATData') != null){
     annotationArea.hidden = false;
@@ -219,7 +220,7 @@ function makeLabelDropDown(clsName, labels){
 }
 
 function setClassLabel(clsName, label){
-    const i = outputData[textIndex-1].label.findIndex(e => e .clsName === clsName)
+    const i = outputData[textIndex-1].label.findIndex(e => e.clsName === clsName)
     if (i > -1){
         outputData[textIndex-1].label[i].label = label;
     }
@@ -843,6 +844,7 @@ function loadConfigSettings(settings){
     }
 }
 
+/*
 async function authenticationOkayButtonClicked(){
     let authKey = personalAccessToken.value;
     const octokit = new Octokit({ auth: authKey });
@@ -854,6 +856,7 @@ async function authenticationOkayButtonClicked(){
 
     loadConfigFile('./config.json');
 }
+*/
 
 //warning before closing the window
 function goodbye(e) {
