@@ -1,4 +1,4 @@
-//import { Octokit } from "https://esm.sh/octokit@2.1.0";
+import { Octokit } from "https://esm.sh/octokit@2.1.0";
 
 let inputData = ['This movie sucks.', 'I loved it!', 'A waste of time.',
                 'Truly awful', 'Most hilarious movie ever'];
@@ -60,7 +60,6 @@ wholeDocumentSwitch.checked = false;
 multilabelSwitch.checked = false;
 localStorageSwitch.checked = false;
 downloadArea.hidden = true;
-authenticationArea.hidden = true;
 
 if (localStorage.getItem('SBATData') != null){
     annotationArea.hidden = false;
@@ -723,6 +722,7 @@ function saveDataToLocalStorage(){
     localStorage.setItem('SBATData', JSON.stringify(SBATData));
 }
 
+/*
 function loadConfigFile(file){
     $.getJSON(file)
     .done(function( data ) {
@@ -746,6 +746,7 @@ function loadConfigFile(file){
         }
     });
 }
+*/
 
 function makeFileSelection(files){
     let fileSelection = document.createElement('select');
@@ -844,7 +845,7 @@ function loadConfigSettings(settings){
     }
 }
 
-/*
+
 async function authenticationOkayButtonClicked(){
     let authKey = personalAccessToken.value;
     const octokit = new Octokit({ auth: authKey });
@@ -852,11 +853,14 @@ async function authenticationOkayButtonClicked(){
         data: { login },
     } = await octokit.rest.users.getAuthenticated();
     authenticatedUser = login;
-    console.log("Hello, %s", login);
+    alert("Hello, %s", login);
 
-    loadConfigFile('./config.json');
+    //loadConfigFile('./config.json');
+    authenticationArea.hidden = true;
+    downloadArea.hidden = false;
+
 }
-*/
+
 
 //warning before closing the window
 function goodbye(e) {
