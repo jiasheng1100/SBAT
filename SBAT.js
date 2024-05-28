@@ -8,7 +8,7 @@ let outputData = [{"text":"This movie sucks.","label":""},{"text":"I loved it!",
                 {"text":"Most hilarious movie ever","label":""}];
 let labelSet = [];
 let labelObjectList = [];
-let paginationValue = 0;
+let paginationValue = 3;
 let shortcutList;
 let multilabel = false;
 let saveToLocalStorage = false;
@@ -48,10 +48,11 @@ let authenticationArea = document.getElementById('authenticationArea');
 let downloadArea = document.getElementById('downloadArea');
 
 // Main/Setup
+console.log("main setup")
 setupHTMLElements();
 progressTextDisplay();
 enteredLabelSet.value = 'Positive\r\nNegative';
-pagination0.selected = true;
+pagination3.selected = true;
 shortcutButton.disabled = true;
 labelSetArea.hidden = true;
 annotationArea.hidden = true;
@@ -60,6 +61,7 @@ wholeDocumentSwitch.checked = false;
 multilabelSwitch.checked = false;
 localStorageSwitch.checked = false;
 downloadArea.hidden = true;
+changePaginationOption()
 
 if (localStorage.getItem('SBATData') != null){
     annotationArea.hidden = false;
@@ -100,6 +102,9 @@ if (localStorage.getItem('SBATData') != null){
 
 
 function setupHTMLElements(){
+
+    console.log("setupHTMLElements")
+
     downloadButton.addEventListener('click', downloadButtonClicked);
     fileSelector.addEventListener('change', (event) => {
         getFileData(event.target.files[0]);
@@ -124,6 +129,9 @@ function setupHTMLElements(){
 // Upload Button
 
 function getFileData(uploadedFile){
+
+    console.log("getFileData")
+
     textIndex = 0;
     outputData = [];
 
@@ -140,6 +148,9 @@ function getFileData(uploadedFile){
 }
 
 function loadTxt(data){
+
+    console.log("loadTxt")
+
     inputData = data.split(/\r?\n/);
     for (let i = 0; i < inputData.length; i++){
         const aO = new Object();
@@ -151,6 +162,9 @@ function loadTxt(data){
 }
 
 function loadJson(data){
+
+    console.log("loadJson")
+
     let json = data;
     let parsedJson = JSON.parse(json);
     inputData = [];
@@ -176,6 +190,9 @@ function loadJson(data){
 // Annotation
 
 function makeLabelButton(label){
+
+    console.log("makeLabelButton")
+
     // create Button Element in HTML
     let labelButton = document.createElement('button');
     labelButton.innerHTML = label.substring(getSubLabelLevel(label));
@@ -190,6 +207,8 @@ function makeLabelButton(label){
 }
 
 function makeLabelDropDown(clsName, labels){
+
+    console.log("makeLabelDropDown")
 
     // create drop down element
     let labelDropDown = document.createElement('select');
@@ -219,6 +238,9 @@ function makeLabelDropDown(clsName, labels){
 }
 
 function setClassLabel(clsName, label){
+
+    console.log("setClassLabel")
+
     const i = outputData[textIndex-1].label.findIndex(e => e.clsName === clsName)
     if (i > -1){
         outputData[textIndex-1].label[i].label = label;
@@ -232,6 +254,9 @@ function setClassLabel(clsName, label){
 }
 
 function addLabel(label){
+
+    console.log("addLabel")
+
     if (multilabel == true){
         let btn = document.getElementById(label + 'Button');
         if (btn.classList.contains('selected')){
@@ -253,6 +278,8 @@ function addLabel(label){
 
 // set the label set to the user entered label set and create the annotation buttons
 function submitButtonClicked(){
+
+    console.log("submitButtonClicked")
 
     shortcutButton.disabled = false;
 
@@ -317,6 +344,8 @@ function submitButtonClicked(){
 
 function progressTextDisplay(){
 
+    console.log("progressTextDisplay")
+
     //hide child buttons
     if (labelObjectList.length > 0){
         for (let i = 0; i < labelObjectList.length; i++){
@@ -327,26 +356,47 @@ function progressTextDisplay(){
         }
     }
 
+    // default: pagination value = 3
     if (paginationValue > 0){
+        console.log("paginationValue > 0")
         if (textIndex < inputData.length){
+            console.log("textIndex < inputData.length")
             for (let i = 1; i <= paginationValue; i++){
+                // fill in all the non-empty textFrontDisplay fields
+                // not triggered if it is the first sentence (textIndex = 0)
                 if (textIndex >= i){
+                    console.log("textIndex >= i")
                     let textFrontDisplay = document.getElementById('textFrontDisplay' + i);
-                    textFrontDisplay.value = inputData[textIndex - i];
+                    if (textFrontDisplay != null){
+                        console.log("ttextFrontDisplay != null")
+                        textFrontDisplay.value = inputData[textIndex - i];
+                    }                   
                 }
+                // fill in all empty textFrontDisplay fields
+                // empty fields becoming less and less when forwarding
                 if(textIndex < paginationValue){
+                    console.log("textIndex < paginationValue")
                     if(document.getElementById('textFrontDisplay' + (textIndex + 1))){
+                        console.log("document.getElementById('textFrontDisplay' + (textIndex + 1))")
                         let textFrontDisplay = document.getElementById('textFrontDisplay' + (textIndex + 1));
                         textFrontDisplay.value = '';
                     }
                 }
+                //fill in all textBackDisplay fields
                 if (textIndex <= (inputData.length - i)){
+                    console.log("textIndex <= (inputData.length - i)")
                     let textBackDisplay = document.getElementById('textBackDisplay' + i);
-                    textBackDisplay.value = inputData[textIndex + i];
-                    if(textBackDisplay.value == 'undefined'){
-                        textBackDisplay.value = '';
+                    if (textBackDisplay != null){
+                        console.log("textBackDisplay != null")
+                        textBackDisplay.value = inputData[textIndex + i];
+                        if(textBackDisplay.value == 'undefined'){
+                            console.log("textBackDisplay.value == 'undefined'")
+                            textBackDisplay.value = '';
+                        }
                     }
                 }
+                
+                //let textFrontDisplay = document.getElementById('textFrontDisplay' + i);
             }
             selectLabelButtons();
             textDisplay.value = inputData[textIndex];
@@ -354,7 +404,7 @@ function progressTextDisplay(){
         }
         else{
             alert ('Reached end of data.');
-            pagination0.selected = true;
+            pagination3.selected = true;  
             changePaginationOption();
             displayOutput();
             if (labelSet.length > 0){
@@ -371,15 +421,19 @@ function progressTextDisplay(){
             }
         }
     }
-
+    
     else{
+        console.log("paginationValue <= 0")
         if (textIndex < inputData.length){
             if(textIndex < 0){
+                console.log("textIndex < 0")
                 textIndex ++;
                 textDisplay.value = inputData[textIndex];
             }
             else{
+                console.log("textIndex >= 0")
                 textDisplay.value = inputData[textIndex];
+                // css stuff
                 selectLabelButtons();
                 textIndex ++;  
             }    
@@ -419,9 +473,15 @@ function progressTextDisplay(){
             }
         }
     }
+
+    console.log(textIndex)
+    console.log(outputData)
 }
 
 function displayOutput(){
+
+    console.log("displayOutput")
+
     let cleanedOutputData = outputData;
     for (let i = 0; i < outputData.length; i++){
         for (let j = 0; j < outputData[i].label.length; j++){
@@ -434,9 +494,12 @@ function displayOutput(){
 
 function selectLabelButtons(){
 
+    console.log("selectLabelButtons")
+
     for (let i = 0; i < labelSet.length; i++){
         if (labelSet[i][0] != '*' && labelSet[i][0] != '-'){
             let btn = document.getElementById(labelSet[i] + 'Button');
+            // The classList property returns the CSS classnames of an element
             if (btn.classList.contains('selected')){
                 btn.classList.remove('selected');
             }
@@ -460,6 +523,9 @@ function selectLabelButtons(){
 }
 
 function getSubLabelLevel(label){
+
+    console.log("getSubLabelLevel")
+
     let counter = 0;
     for (let i = 0; i < label.length; i++){
         if (label[i] == '>'){
@@ -473,6 +539,9 @@ function getSubLabelLevel(label){
 }
 
 function textBackwardButtonClicked(){
+
+    console.log("textBackwardButtonClicked")
+
     if (textIndex-2 >= 0){
         textIndex-=2;
         progressTextDisplay();
@@ -480,6 +549,9 @@ function textBackwardButtonClicked(){
 }
 
 function textForwardButtonClicked(){
+
+    console.log("textForwardButtonClicked")
+
     if (textIndex < inputData.length){
         progressTextDisplay();
     }
@@ -488,6 +560,8 @@ function textForwardButtonClicked(){
 // Download Button
 
 function downloadButtonClicked(){
+
+    console.log("downloadButtonClicked")
 
     let cleanedOutputData = outputData;
     /*
@@ -513,7 +587,7 @@ function downloadButtonClicked(){
         downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
     }
     else
-    {
+    {                                                                                                                                                                                                                                                                                                                                                                                                                
         // Firefox requires the link to be added to the DOM
         // before it can be clicked.
         downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
@@ -528,7 +602,10 @@ function downloadButtonClicked(){
 
 function changePaginationOption(){
 
+    console.log("changePaginationOption")
+
     if (pagination0.selected == true){
+        // remove all old textFontDiv and TextBackDiv elements
         for(let i = 1; i <= paginationValue; i++){
             let textFrontDiv = document.getElementById('textFrontDiv' + i);
             let textBackDiv = document.getElementById('textBackDiv' + i);
@@ -540,11 +617,16 @@ function changePaginationOption(){
         paginationValue = 0;
     }
     else {
+        // remove all old textFontDiv and TextBackDiv elements
         for(let i = 1; i <= paginationValue; i++){
             let textFrontDiv = document.getElementById('textFrontDiv' + i);
             let textBackDiv = document.getElementById('textBackDiv' + i);
-            textFrontDiv.parentNode.removeChild(textFrontDiv);
+            if (textFrontDiv != null){
+                textFrontDiv.parentNode.removeChild(textFrontDiv);
+            }
+            if (textBackDiv != null){
             textBackDiv.parentNode.removeChild(textBackDiv);
+            }
         }
         if (pagination1.selected == true){
             paginationValue = 1;
@@ -591,6 +673,8 @@ function changePaginationOption(){
 
 function shortcutButtonClicked(){
 
+    console.log("shortcutButtonClicked")
+
     for(let i = 0; i < labelSet.length; i++){
         let shortcutField = document.createElement('textarea');
         shortcutField.style = 'width:30px; height:15px';
@@ -608,6 +692,8 @@ function shortcutButtonClicked(){
 }
 
 function shortcutOkayButtonClicked(){
+
+    console.log("shortcutOkayButtonClicked")
 
     // fill the shortcutList with the entered shortcuts & delete html elements
     let scList = new Object();
@@ -630,6 +716,9 @@ function shortcutOkayButtonClicked(){
 }
 
 function addShortcutFunctionality(){
+
+    console.log("addShortcutFunctionality")
+
     document.onkeyup = function(e){
         if (e.which == 37 || e.keyCode == 37){
             textBackwardButton.click();
@@ -649,6 +738,9 @@ function addShortcutFunctionality(){
 //switches
 
 function settingSwitchClicked(){
+
+    console.log("settingSwitchClicked")
+
     if(settingSwitch.checked == true){
         labelSetArea.hidden = false;
         uploadArea.hidden = false;
@@ -660,6 +752,9 @@ function settingSwitchClicked(){
 }
 
 function wholeDocumentSwitchClicked(){
+
+    console.log("wholeDocumentSwitchClicked")
+
     if (wholeDocumentSwitch.checked == true){
         textDisplay.value = '';
         for (let i = 0; i < inputData.length; i++){
@@ -692,6 +787,9 @@ function wholeDocumentSwitchClicked(){
 }
 
 function multilabelSwitchClicked(){
+
+    console.log("multilabelSwitchClicked")
+
     if (multilabelSwitch.checked == true){
         multilabel = true;
     }
@@ -701,6 +799,9 @@ function multilabelSwitchClicked(){
 }
 
 function localStorageSwitchClicked(){
+
+    console.log("localStorageSwitchClicked")
+
     if (localStorageSwitch.checked == true){
         saveToLocalStorage = true;
     }
@@ -710,6 +811,9 @@ function localStorageSwitchClicked(){
 }
 
 function saveDataToLocalStorage(){
+
+    console.log("saveDataToLocalStorage")
+
     let SBATData = new Object();
     SBATData.inputData = inputData;
     SBATData.textIndex = textIndex;
@@ -749,6 +853,9 @@ function loadConfigFile(file){
 */
 
 function makeFileSelection(files){
+
+    console.log("makeFileSelection")
+
     let fileSelection = document.createElement('select');
     fileSelection.id = 'fileSelection';
     let fileSelectionLabel = document.createElement('label');
@@ -806,6 +913,9 @@ function makeFileSelection(files){
 }
 
 function loadConfigSettings(settings){
+
+    console.log("loadConfigSettings")
+
     annotationArea.hidden = false;
     welcomeArea.hidden = true;
     multilabel = settings.multilabel;
@@ -847,13 +957,16 @@ function loadConfigSettings(settings){
 
 
 async function authenticationOkayButtonClicked(){
+
+    console.log("authenticationOkayButtonClicked")
+
     let authKey = personalAccessToken.value;
     const octokit = new Octokit({ auth: authKey });
     const {
         data: { login },
     } = await octokit.rest.users.getAuthenticated();
     authenticatedUser = login;
-    alert("Hello, %s", login);
+    console.log("Hello, %s", login);
 
     //loadConfigFile('./config.json');
     authenticationArea.hidden = true;
@@ -864,6 +977,9 @@ async function authenticationOkayButtonClicked(){
 
 //warning before closing the window
 function goodbye(e) {
+
+    console.log("goodbye")
+
     if (saveToLocalStorage){
         saveDataToLocalStorage();
     }
@@ -884,6 +1000,9 @@ window.onbeforeunload = goodbye;
 
 // keyboard shortcuts for the navigation buttons
 document.onkeyup = function(e){
+
+    console.log("onkeyup")
+
     if (e.which == 37 || e.keyCode == 37){
         textBackwardButton.click();
     }
