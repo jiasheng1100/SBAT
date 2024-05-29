@@ -17,6 +17,7 @@ let authenticatedUser = '';
 
 // HTML Elements
 let textDisplay = document.getElementById('textDisplay');
+let labelDisplay = document.getElementById('labelDisplay');
 let downloadButton = document.getElementById('downloadButton');
 let fileSelector = document.getElementById('fileSelector');
 let submitButton = document.getElementById('submitButton');
@@ -358,48 +359,57 @@ function progressTextDisplay(){
 
     // default: pagination value = 3
     if (paginationValue > 0){
-        console.log("paginationValue > 0")
+        //console.log("paginationValue > 0")
         if (textIndex < inputData.length){
-            console.log("textIndex < inputData.length")
+            //console.log("textIndex < inputData.length")
             for (let i = 1; i <= paginationValue; i++){
                 // fill in all the non-empty textFrontDisplay fields
                 // not triggered if it is the first sentence (textIndex = 0)
                 if (textIndex >= i){
                     console.log("textIndex >= i")
                     let textFrontDisplay = document.getElementById('textFrontDisplay' + i);
+                    let labelFrontDisplay = document.getElementById('labelFrontDisplay' + i);
                     if (textFrontDisplay != null){
-                        console.log("ttextFrontDisplay != null")
+                        //console.log("ttextFrontDisplay != null")
                         textFrontDisplay.value = inputData[textIndex - i];
+                        //labelFrontDisplay.value = labelFrontDisplay.id;
+                        labelFrontDisplay.value = outputData[textIndex - i].label;
                     }                   
                 }
                 // fill in all empty textFrontDisplay fields
                 // empty fields becoming less and less when forwarding
                 if(textIndex < paginationValue){
-                    console.log("textIndex < paginationValue")
+                    //console.log("textIndex < paginationValue")
                     if(document.getElementById('textFrontDisplay' + (textIndex + 1))){
-                        console.log("document.getElementById('textFrontDisplay' + (textIndex + 1))")
+                        //console.log("document.getElementById('textFrontDisplay' + (textIndex + 1))")
                         let textFrontDisplay = document.getElementById('textFrontDisplay' + (textIndex + 1));
+                        let labelFrontDisplay = document.getElementById('labelFrontDisplay' + (textIndex + 1));
                         textFrontDisplay.value = '';
+                        labelFrontDisplay.value = '';
                     }
                 }
                 //fill in all textBackDisplay fields
                 if (textIndex <= (inputData.length - i)){
-                    console.log("textIndex <= (inputData.length - i)")
+                    //console.log("textIndex <= (inputData.length - i)")
                     let textBackDisplay = document.getElementById('textBackDisplay' + i);
+                    let labelBackDisplay = document.getElementById('labelBackDisplay' + i);
                     if (textBackDisplay != null){
-                        console.log("textBackDisplay != null")
+                        //console.log("textBackDisplay != null")
                         textBackDisplay.value = inputData[textIndex + i];
+                        if (textIndex + i < outputData.length){
+                            labelBackDisplay.value = outputData[textIndex + i].label
+                        }
+                        //labelBackDisplay.value = labelBackDisplay.id;
                         if(textBackDisplay.value == 'undefined'){
-                            console.log("textBackDisplay.value == 'undefined'")
+                            //console.log("textBackDisplay.value == 'undefined'")
                             textBackDisplay.value = '';
                         }
                     }
                 }
-                
-                //let textFrontDisplay = document.getElementById('textFrontDisplay' + i);
             }
             selectLabelButtons();
             textDisplay.value = inputData[textIndex];
+            labelDisplay.value = outputData[textIndex].label
             textIndex++;
         }
         else{
@@ -423,15 +433,15 @@ function progressTextDisplay(){
     }
     
     else{
-        console.log("paginationValue <= 0")
+        //console.log("paginationValue <= 0")
         if (textIndex < inputData.length){
             if(textIndex < 0){
-                console.log("textIndex < 0")
+                //console.log("textIndex < 0")
                 textIndex ++;
                 textDisplay.value = inputData[textIndex];
             }
             else{
-                console.log("textIndex >= 0")
+                //console.log("textIndex >= 0")
                 textDisplay.value = inputData[textIndex];
                 // css stuff
                 selectLabelButtons();
@@ -492,10 +502,12 @@ function displayOutput(){
     textDisplay.value = JSON.stringify(cleanedOutputData);
 }
 
+// css stuff
 function selectLabelButtons(){
 
     console.log("selectLabelButtons")
 
+    // unselect all previously selected labels
     for (let i = 0; i < labelSet.length; i++){
         if (labelSet[i][0] != '*' && labelSet[i][0] != '-'){
             let btn = document.getElementById(labelSet[i] + 'Button');
@@ -509,6 +521,7 @@ function selectLabelButtons(){
             drpdwn.value = 0;
         }
     }
+    // display all currently selected labels as selected
     for (let i = 0; i < outputData[textIndex].label.length; i++){
         if (typeof outputData[textIndex].label[i] ==='string' || outputData[textIndex].label[i]instanceof String){
             let btn = document.getElementById(outputData[textIndex].label[i] + 'Button');
@@ -644,14 +657,22 @@ function changePaginationOption(){
             textFrontDisplay.style = 'width:600px; height:50px';
             textFrontDisplay.readonly = true;
             textFrontDisplay.id = 'textFrontDisplay' + i;
+            // add textarea to display previous labels
+            let labelFrontDisplay = document.createElement('textarea')
+            labelFrontDisplay.style = 'width:50px; height:50px';
+            //labelFrontDisplay.style.fontsize = "10px"
+            labelFrontDisplay.readonly = true;
+            labelFrontDisplay.id = 'labelFrontDisplay' + i;
             if (i == 1){
                 annotationArea.insertBefore(textFrontDiv, textDisplay);
                 textFrontDiv.appendChild(textFrontDisplay);
+                textFrontDiv.appendChild(labelFrontDisplay);
             }
             else{
                 let textFrontDivFront = document.getElementById('textFrontDiv' + (i-1));
                 annotationArea.insertBefore(textFrontDiv, textFrontDivFront);
                 textFrontDiv.appendChild(textFrontDisplay);
+                textFrontDiv.appendChild(labelFrontDisplay);
             }
             let textBackDiv = document.createElement('div');
             textBackDiv.id = 'textBackDiv' + i;
@@ -659,11 +680,21 @@ function changePaginationOption(){
             textBackDisplay.style = 'width:600px; height:50px';
             textBackDisplay.readonly = true;
             textBackDisplay.id = 'textBackDisplay' + i;
+            // add textarea to display previous labels
+            let labelBackDisplay = document.createElement('textarea')
+            labelBackDisplay.style = 'width:50px; height:50px';
+            //labelBackDisplay.style.fontsize = "10px"
+            labelBackDisplay.readonly = true;
+            labelBackDisplay.id = 'labelBackDisplay' + i;
             annotationArea.insertBefore(textBackDiv, numberOfTexts);
             textBackDiv.appendChild(textBackDisplay);
+            textBackDiv.appendChild(labelBackDisplay);
         }
-        textDisplay.style = 'width:600px; height:50px';
+        textDisplay.style = 'width:600px; height:150px';
         textDisplay.style.fontWeight = 'bold';
+        labelDisplay.style.fontSize = '10px';
+        labelDisplay.style = 'width:50px; height:50px';
+        labelDisplay.style.fontWeight = 'bold';
     }
     textIndex--;
     progressTextDisplay();
