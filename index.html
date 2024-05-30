@@ -18,15 +18,15 @@
     </div>
 
     <div id="annotationArea">
-        <textarea style="width:600px; height:200px" id="textDisplay" readonly></textarea>
-        <textarea style="width:100px; height:200px" id="labelDisplay" readonly></textarea>
-        <textarea id="numberOfTexts" readonly style="width:50px; height:20px"></textarea>
-
+        <textarea style="width:500px; height:200px" id="textDisplay"></textarea>
+        <textarea style="width:200px; height:200px" id="labelDisplay" readonly></textarea>
+        <div id="labelButtonArea"></div>
+        <div id="spanLabelButtonArea">Annotate Selected Span: </div>
         <div id="orientationButtonArea">
             <button id="textBackwardButton"><<<</button>
             <button id="textForwardButton">>>></button>
         </div>
-        <div id="labelButtonArea"></div>
+        <textarea id="numberOfTexts" readonly style="width:50px; height:20px"></textarea>
         <div>
             <input type="checkbox" id="wholeDocumentSwitch">
             <label for="wholeDocumentSwitch">Show whole document</label>

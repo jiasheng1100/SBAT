@@ -47,6 +47,10 @@ let personalAccessToken = document.getElementById('personalAccessToken');
 let authenticationOkayButton = document.getElementById('authenticationOkayButton');
 let authenticationArea = document.getElementById('authenticationArea');
 let downloadArea = document.getElementById('downloadArea');
+let spanLabelButtonArea = document.getElementById('spanLabelButtonArea');
+//let spanButton = document.getElementById("spanButton");
+let spanStartIndex = 0
+let spanEndIndex = 0
 
 // Main/Setup
 console.log("main setup")
@@ -57,11 +61,13 @@ pagination3.selected = true;
 shortcutButton.disabled = true;
 labelSetArea.hidden = true;
 annotationArea.hidden = true;
+//annotationArea.hidden = false;
 settingSwitch.checked = false;
 wholeDocumentSwitch.checked = false;
 multilabelSwitch.checked = false;
 localStorageSwitch.checked = false;
 downloadArea.hidden = true;
+spanLabelButtonArea.hidden = true;
 changePaginationOption()
 
 if (localStorage.getItem('SBATData') != null){
@@ -125,6 +131,7 @@ function setupHTMLElements(){
     multilabelSwitch.addEventListener('change', multilabelSwitchClicked);
     localStorageSwitch.addEventListener('change', localStorageSwitchClicked);
     authenticationOkayButton.addEventListener('click', authenticationOkayButtonClicked);
+    //spanButton.addEventListener("click", spanButtonClicked);
 }
 
 // Upload Button
@@ -157,6 +164,7 @@ function loadTxt(data){
         const aO = new Object();
         aO.text = inputData[i];
         aO.label = [];
+        aO.spans = [];
         outputData.push(aO);
     }
     progressTextDisplay();
@@ -201,9 +209,20 @@ function makeLabelButton(label){
     labelButton.className = 'labelButton';
     labelButtonArea.appendChild(labelButton);
 
+    let spanLabelButton = document.createElement('button');
+    spanLabelButton.innerHTML = label.substring(getSubLabelLevel(label));
+    spanLabelButton.id = label + 'SpanButton';
+    spanLabelButton.className = 'spanLabelButton';
+    spanLabelButtonArea.appendChild(spanLabelButton);
+
+
     // give Button functionality
     document.getElementById(labelButton.id).addEventListener('click', function (){
         addLabel(label);
+    })
+
+    document.getElementById(spanLabelButton.id).addEventListener('click', function (){
+        addSpanLabel(label);
     })
 }
 
@@ -258,16 +277,18 @@ function addLabel(label){
 
     console.log("addLabel")
 
+ 
     if (multilabel == true){
         let btn = document.getElementById(label + 'Button');
         if (btn.classList.contains('selected')){
             btn.classList.remove('selected');
             outputData[textIndex-1].label = outputData[textIndex-1].label.filter(function(e) { return e !== label });
         }
+        // otherwise, the user selected the label, add it into the labels list
         else{
             outputData[textIndex-1].label.push(label);
         }
-        textIndex--;
+        textIndex--;    // decreasing textIndex in order to stay at the current item after progressTextDisplay
         progressTextDisplay();
     }
     else{
@@ -276,6 +297,47 @@ function addLabel(label){
         progressTextDisplay();
     }
 }
+
+function addSpanLabel(label){
+
+    console.log("addSpanLabel")
+
+    let spanText = outputData[textIndex-1].text.slice(spanStartIndex, spanEndIndex);
+    //let spanIndex = outputData[textIndex-1].spans.indexOf()
+
+    /*
+    if (multilabel == true){
+        let btn = document.getElementById(label + 'Button');
+        // if the user unselected the label, remove it from labels list
+        if (btn.classList.contains('selected')){
+            btn.classList.remove('selected');
+            outputData[textIndex-1].spans = outputData[textIndex-1].spans.filter(function(span) { return span.text !==  spanText});
+        }
+        // otherwise, the user selected the label, add it into the labels list
+        else{
+            outputData[textIndex-1].spans.push(label);
+        }
+        textIndex--;    // decreasing textIndex in order to stay at the current item after progressTextDisplay
+        progressTextDisplay();
+    }
+    else{
+        const span = new Object();
+        span.text = spanText;
+        span.label = [];
+        span.label.push(label);
+        outputData[textIndex-1].spans.push(span)
+    }
+    */
+
+    const span = new Object();
+    span.text = spanText;
+    span.label = [];
+    span.label.push(label);
+    outputData[textIndex-1].spans.push(span);
+    spanLabelButtonArea.hidden = true;
+
+}
+
 
 // set the label set to the user entered label set and create the annotation buttons
 function submitButtonClicked(){
@@ -341,6 +403,8 @@ function submitButtonClicked(){
 
     textIndex--;
     progressTextDisplay();
+    settingSwitch.checked = false;
+    settingSwitchClicked();
 }
 
 function progressTextDisplay(){
@@ -625,7 +689,7 @@ function changePaginationOption(){
             textFrontDiv.parentNode.removeChild(textFrontDiv);
             textBackDiv.parentNode.removeChild(textBackDiv);
         }
-        textDisplay.style = 'width:600px; height:200px';
+        textDisplay.style = 'width:500px; height:300px';
         textDisplay.style.fontWeight = 'normal';
         paginationValue = 0;
     }
@@ -654,12 +718,12 @@ function changePaginationOption(){
             let textFrontDiv = document.createElement('div');
             textFrontDiv.id = 'textFrontDiv' + i;
             let textFrontDisplay = document.createElement('textarea');
-            textFrontDisplay.style = 'width:600px; height:50px';
+            textFrontDisplay.style = 'width:450px; height:50px';
             textFrontDisplay.readonly = true;
             textFrontDisplay.id = 'textFrontDisplay' + i;
             // add textarea to display previous labels
             let labelFrontDisplay = document.createElement('textarea')
-            labelFrontDisplay.style = 'width:50px; height:50px';
+            labelFrontDisplay.style = 'width:150px; height:50px';
             //labelFrontDisplay.style.fontsize = "10px"
             labelFrontDisplay.readonly = true;
             labelFrontDisplay.id = 'labelFrontDisplay' + i;
@@ -677,12 +741,12 @@ function changePaginationOption(){
             let textBackDiv = document.createElement('div');
             textBackDiv.id = 'textBackDiv' + i;
             let textBackDisplay = document.createElement('textarea');
-            textBackDisplay.style = 'width:600px; height:50px';
+            textBackDisplay.style = 'width:450px; height:50px';
             textBackDisplay.readonly = true;
             textBackDisplay.id = 'textBackDisplay' + i;
             // add textarea to display previous labels
             let labelBackDisplay = document.createElement('textarea')
-            labelBackDisplay.style = 'width:50px; height:50px';
+            labelBackDisplay.style = 'width:150px; height:50px';
             //labelBackDisplay.style.fontsize = "10px"
             labelBackDisplay.readonly = true;
             labelBackDisplay.id = 'labelBackDisplay' + i;
@@ -690,11 +754,11 @@ function changePaginationOption(){
             textBackDiv.appendChild(textBackDisplay);
             textBackDiv.appendChild(labelBackDisplay);
         }
-        textDisplay.style = 'width:600px; height:150px';
+        textDisplay.style = 'width:450px; height:300px';
         textDisplay.style.fontWeight = 'bold';
         labelDisplay.style.fontSize = '10px';
-        labelDisplay.style = 'width:50px; height:50px';
-        labelDisplay.style.fontWeight = 'bold';
+        labelDisplay.style = 'width:150px; height:300px';
+        //labelDisplay.style.fontWeight = 'bold';
     }
     textIndex--;
     progressTextDisplay();
@@ -774,7 +838,7 @@ function settingSwitchClicked(){
 
     if(settingSwitch.checked == true){
         labelSetArea.hidden = false;
-        uploadArea.hidden = false;
+        uploadArea.hidden = true;
     }
     else{
         labelSetArea.hidden = true;
@@ -1004,6 +1068,16 @@ async function authenticationOkayButtonClicked(){
     downloadArea.hidden = false;
 
 }
+
+
+document.addEventListener('mouseup', () => {
+    if (textDisplay.selectionStart !== textDisplay.selectionEnd){
+        spanStartIndex = textDisplay.selectionStart
+        spanEndIndex = textDisplay.selectionEnd
+        console.log(textDisplay.value.slice(spanStartIndex, spanEndIndex))
+        spanLabelButtonArea.hidden = false
+    }
+})
 
 
 //warning before closing the window
