@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,97 +8,114 @@
     <title>SBAT</title>
     <link rel="stylesheet" href="SBAT.css">
 </head>
+
 <body>
-    <img src="SBATlogo.png" alt="SBAT logo" id="SBATlogo">
-    <h1>SBAT</h1>
 
-    <div id="welcomeArea">
-        <h2>Welcome to SBAT</h2>
-        <h3>A simple browser-based annotation tool</h3>
-        <P>Please upload your file below.</P>
-    </div>
 
-    <div id="annotationArea">
-        <textarea style="width:500px; height:200px" id="textDisplay"></textarea>
-        <textarea style="width:200px; height:200px" id="labelDisplay" readonly></textarea>
-        <div id="labelButtonArea"></div>
-        <div id="spanLabelButtonArea">Annotate Selected Span: </div>
-        <div id="orientationButtonArea">
-            <button id="textBackwardButton"><<<</button>
-            <button id="textForwardButton">>>></button>
-        </div>
-        <textarea id="numberOfTexts" readonly style="width:50px; height:20px"></textarea>
-        <div>
-            <input type="checkbox" id="wholeDocumentSwitch">
-            <label for="wholeDocumentSwitch">Show whole document</label>
-            <input type="checkbox" id="settingSwitch">
-            <label for="settingSwitch" id="settingSwitchLabel">Show settings</label>
-        </div>
-    </div>
 
-    <div id="uploadArea">
-        <input type="file" id="fileSelector" accept=".txt, .json">
-    </div>
 
-    <div id="labelSetArea">
-        <div id="labelSetInstructions">
-            <p>Please enter your label set, one label per line. For hierarchical labels, enter subordinate labels underneath their parent label and begin the line of the subordinate label with a ></p>
-            <div>
-                For example:
-                <div>
-                    Person
-                </div>
-                <div>
-                    >Politician
-                </div>
+    <div class="flex-container">
+        <div id="leftPanel">
+            <div id="logoArea">
+                <img src="SBATlogo.png" alt="SBAT logo" id="SBATlogo">
+                <h1>SBAT</h1>
             </div>
-            <p>For multi-class classification, write the classname on a line beginning with a *, and write the labels underneath, beginning each line with a -.</p>
-            <div>
-                For example:
-                <div>
-                    *Sentiment
-                </div>
-                <div>
-                    -Positive
-                </div>
-                <div>
-                    -Negative
-                </div>
+            <div id="welcomeArea" style="text-align:center">
+                <h3>A simple browser-based annotation tool</h3>
+            </div>
+            <div id="authenticationArea">
+                <p>Personal Access Token</p>
+                <textarea style="width: 200px; height: 25px;"
+                    id="personalAccessToken">Enter Personal Access Token here...</textarea>
+                <button id="authenticationOkayButton">Okay</button>
+            </div>
+            <div id="downloadArea">
+                <div>Save annotated file</div>
+                <textarea style="width:200px; height:20px" id="fileNameToSaveAs">Enter file name here...</textarea>
+                <button id="downloadButton" type="button">Download</button>
+            </div>
+            <div id="uploadArea">
+                <div>Upload new file (.txt / .json)</div>
+                <input type="file" id="fileSelector" accept=".txt, .json" style="text-align:center">
             </div>
         </div>
-        <textarea style="width:200px; height:200px" id="enteredLabelSet"></textarea>
-        <button id="submitButton">Set Labels</button>
-        <button id="shortcutButton">Set Shortcuts</button>
-        <div id="shortcutArea">
-            <button id="shortcutOkayButton" hidden>Okay</button>
+
+        <div id="annotationArea">
+            <textarea style="width:500px; height:200px" id="textDisplay"></textarea>
+            <textarea style="width:200px; height:200px" id="labelDisplay" readonly></textarea>
+            <div id="labelButtonArea"></div>
+            <div id="spanLabelButtonArea">Annotate Selected Span: </div>
+            <div id="orientationButtonArea">
+                <button id="textBackwardButton">prev </button>
+                <button id="textForwardButton">next</button>
+            </div>
+            <textarea id="numberOfTexts" readonly style="width:50px; height:20px"></textarea>
         </div>
-        <div>
-            <select id="paginationDropdown">
-                <option id="pagination0">0</option>
-                <option id="pagination1">1</option>
-                <option id="pagination2">2</option>
-                <option id="pagination3">3</option>
-            </select>
-            <label for="paginationDropdown">Pagination</label>
+
+        <div id="rightPanel">
+            <div id="checkboxArea">
+                <div>
+                    <label for="paginationDropdown">Pagination</label>
+                    <select id="paginationDropdown">
+                        <option id="pagination0">0</option>
+                        <option id="pagination1">1</option>
+                        <option id="pagination2">2</option>
+                        <option id="pagination3">3</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="checkbox" id="wholeDocumentSwitch">
+                    <label for="wholeDocumentSwitch">Show whole document</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="settingSwitch">
+                    <label for="settingSwitch" id="settingSwitchLabel">Show labels Setting</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="multilabelSwitch">
+                    <label for="multilabelSwitch">Allow multiple labels per text</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="localStorageSwitch">
+                    <label for="localStorageSwitch">Save data to localStorage</label>
+                </div>
+            </div>
+            <div id="labelSetArea">
+                <div id="labelSetInstructions">
+                    <p>Please enter your label set, one label per line. For hierarchical labels, enter subordinate
+                        labels underneath their parent label and begin the line of the subordinate label with a ></p>
+                    <div>
+                        For example:
+                        <div>
+                            Person
+                        </div>
+                        <div>
+                            >Politician
+                        </div>
+                    </div>
+                    <p>For multi-class classification, write the classname on a line beginning with a *, and write the
+                        labels underneath, beginning each line with a -.</p>
+                    <div>
+                        For example:
+                        <div>
+                            *Sentiment
+                        </div>
+                        <div>
+                            -Positive
+                        </div>
+                        <div>
+                            -Negative
+                        </div>
+                    </div>
+                </div>
+                <textarea style="width:200px; height:200px" id="enteredLabelSet"></textarea>
+                <button id="submitButton">Set Labels</button>
+                <button id="shortcutButton">Set Shortcuts</button>
+                <div id="shortcutArea">
+                    <button id="shortcutOkayButton" hidden>Okay</button>
+                </div>
+            </div>
         </div>
-        <div>
-            <input type="checkbox" id="multilabelSwitch">
-            <label for="multilabelSwitch">Allow setting multiple labels per text</label>
-        </div>
-        <div>
-            <input type="checkbox" id="localStorageSwitch">
-            <label for="localStorageSwitch">Save data to localStorage</label>
-        </div>
-    </div>
-    <div id="authenticationArea">
-        <p>Please enter your personal access token below.</p>
-        <textarea style="width: 200px; height: 25px;" id="personalAccessToken"></textarea>
-        <button id="authenticationOkayButton">Okay</button>
-    </div>
-    <div id="downloadArea">
-        <div>Enter a file name</div>
-        <textarea style="width:200px; height:20px" id="fileNameToSaveAs"></textarea>
-        <button id="downloadButton" type="button">Download</button>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script type="module" src="SBAT.js"></script>
