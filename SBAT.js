@@ -14,7 +14,7 @@ let outputData = []
 let textIndex = 0;
 let labelSet = [];
 let labelObjectList = [];
-let paginationValue = 3;
+let paginationValue = 0;
 let shortcutList;
 let multilabel = false;
 let saveToLocalStorage = false;
@@ -23,7 +23,7 @@ let authenticatedUser = '';
 
 // HTML Elements
 let textDisplay = document.getElementById('textDisplay');
-let labelDisplay = document.getElementById('labelDisplay');
+//let labelDisplay = document.getElementById('labelDisplay');
 let downloadButton = document.getElementById('downloadButton');
 let fileSelector = document.getElementById('fileSelector');
 let submitButton = document.getElementById('submitButton');
@@ -43,14 +43,14 @@ let textForwardButton = document.getElementById('textForwardButton');
 let numberOfTexts = document.getElementById('numberOfTexts');
 let labelSetArea = document.getElementById('labelSetArea');
 let settingSwitch = document.getElementById('settingSwitch');
-let settingSwitchLabel = document.getElementById('settingSwitchLabel');
+//let settingSwitchLabel = document.getElementById('settingSwitchLabel');
 let wholeDocumentSwitch = document.getElementById('wholeDocumentSwitch');
 let multilabelSwitch = document.getElementById('multilabelSwitch');
-let welcomeArea = document.getElementById('welcomeArea');
-let uploadArea = document.getElementById('uploadArea');
+//let welcomeArea = document.getElementById('welcomeArea');
+//let uploadArea = document.getElementById('uploadArea');
 let localStorageSwitch = document.getElementById('localStorageSwitch');
-let personalAccessToken = document.getElementById('personalAccessToken');
-let authenticationOkayButton = document.getElementById('authenticationOkayButton');
+//let personalAccessToken = document.getElementById('personalAccessToken');
+//let authenticationOkayButton = document.getElementById('authenticationOkayButton');
 let authenticationArea = document.getElementById('authenticationArea');
 let downloadArea = document.getElementById('downloadArea');
 let spanLabelButtonArea = document.getElementById('spanLabelButtonArea');
@@ -64,7 +64,7 @@ console.log("main setup")
 setupHTMLElements();
 progressTextDisplay();
 enteredLabelSet.value = 'Positive\r\nNegative';
-pagination3.selected = true;
+pagination0.selected = true;
 shortcutButton.disabled = true;
 labelSetArea.hidden = true;
 annotationArea.hidden = true;
@@ -76,13 +76,13 @@ multilabelSwitch.checked = false;
 localStorageSwitch.checked = false;
 downloadArea.hidden = true;
 spanLabelButtonArea.hidden = true;
-changePaginationOption()
+//changePaginationOption()
 authenticationArea.hidden = true;
 //personalAccessToken.defaultValue = "Enter Personal Access Token here ..."
 
 if (localStorage.getItem('SBATData') != null) {
     annotationArea.hidden = false;
-    welcomeArea.hidden = true;
+    //welcomeArea.hidden = true;
     SBATData = JSON.parse(localStorage.getItem('SBATData'));
     inputData = SBATData.inputData;
     textIndex = SBATData.textIndex;
@@ -127,7 +127,7 @@ function setupHTMLElements() {
         getFileData(event.target.files[0]);
         annotationArea.hidden = false;
         checkboxArea.hidden = false;
-        welcomeArea.hidden = true;
+        //welcomeArea.hidden = true;
         //uploadArea.hidden = true;
         downloadArea.hidden = false;
     });
@@ -175,7 +175,7 @@ function loadTxt(data) {
         const aO = new Object();
         aO.text = inputData[i];
         aO.label = [];
-        aO.spans = [];
+        aO.spans = new Map();
         outputData.push(aO);
     }
     progressTextDisplay();
@@ -313,15 +313,23 @@ function addSpanLabel(label) {
 
     console.log("addSpanLabel")
 
-    let spanText = outputData[textIndex - 1].text.slice(spanStartIndex, spanEndIndex);
-
-    const span = new Object();
-    span.text = spanText;
+    //let indices = spanStartIndex.toString() + "-" + spanEndIndex.toString()
+    if (outputData[textIndex - 1].spans.has([spanStartIndex, spanEndIndex])) {
+        outputData[textIndex - 1].spans.set([spanStartIndex, spanEndIndex], [...outputData[textIndex - 1].spans.get(indices), label])
+    }
+    else {
+        outputData[textIndex - 1].spans.set([spanStartIndex, spanEndIndex], [label])
+    }
+    /*
+    span.indexes = [spanStartIndex, spanEndIndex];
     span.label = [];
     span.label.push(label);
     outputData[textIndex - 1].spans.push(span);
+    */
     spanLabelButtonArea.hidden = true;
     labelButtonArea.hidden = false;
+    textIndex--;
+    progressTextDisplay();
 
 }
 
@@ -400,8 +408,6 @@ function progressTextDisplay() {
 
     if (inputData.length > 0) {
 
-
-
         //hide child buttons
         if (labelObjectList.length > 0) {
             for (let i = 0; i < labelObjectList.length; i++) {
@@ -414,7 +420,6 @@ function progressTextDisplay() {
 
         // default: pagination value = 3
         if (paginationValue > 0) {
-            //console.log("paginationValue > 0")
             if (textIndex < inputData.length) {
                 //console.log("textIndex < inputData.length")
                 for (let i = 1; i <= paginationValue; i++) {
@@ -463,13 +468,22 @@ function progressTextDisplay() {
                     }
                 }
                 selectLabelButtons();
-                textDisplay.value = inputData[textIndex];
-                labelDisplay.value = outputData[textIndex].label;
+                textDisplay.innerHTML = inputData[textIndex];
+                /*
+                labelDisplay.value = outputData[textIndex].label
+                if (outputData[textIndex].spans.length > 0) {
+                    labelDisplay.value = outputData[textIndex].label + "\n" + JSON.stringify(outputData[textIndex].spans)
+                }
+                else {
+                    labelDisplay.value = outputData[textIndex].label;
+                }
+                */
+
                 textIndex++;
             }
             else {
                 alert('Reached end of data.');
-                pagination3.selected = true;
+                pagination0.selected = true;
                 changePaginationOption();
                 displayOutput();
                 if (labelSet.length > 0) {
@@ -487,17 +501,27 @@ function progressTextDisplay() {
             }
         }
 
+        // if pagination value <= 0
         else {
-            //console.log("paginationValue <= 0")
             if (textIndex < inputData.length) {
                 if (textIndex < 0) {
                     //console.log("textIndex < 0")
                     textIndex++;
-                    textDisplay.value = inputData[textIndex];
+                    if (outputData[textIndex].spans.size > 0) {
+                        textDisplay.innerHTML = hightlightAtIndices(Array.from(outputData[textIndex].spans.keys()), inputData[textIndex])
+                    }
+                    else {
+                        textDisplay.innerHTML = inputData[textIndex];
+                    }
                 }
                 else {
                     //console.log("textIndex >= 0")
-                    textDisplay.value = inputData[textIndex];
+                    if (outputData[textIndex].spans.size > 0) {
+                        textDisplay.innerHTML = hightlightAtIndices(Array.from(outputData[textIndex].spans.keys()), inputData[textIndex])
+                    }
+                    else {
+                        textDisplay.innerHTML = inputData[textIndex];
+                    }
                     // css stuff
                     selectLabelButtons();
                     textIndex++;
@@ -544,6 +568,17 @@ function progressTextDisplay() {
     }
 }
 
+function hightlightAtIndices(indices, text) {
+
+    let result = indices.reduce((str, [start, end]) => {
+        str[start] = `<span class="bold">${str[start]}`;
+        str[end] = `${str[end]}</span>`;
+        return str;
+    }, text.split("")).join("");
+    console.log(result)
+    return result
+
+}
 function displayOutput() {
 
     console.log("displayOutput")
@@ -553,9 +588,8 @@ function displayOutput() {
         for (let j = 0; j < outputData[i].label.length; j++) {
             cleanedOutputData[i].label[j] = outputData[i].label[j].substring(getSubLabelLevel(outputData[i].label[j]));
         }
-
     }
-    textDisplay.value = JSON.stringify(cleanedOutputData);
+    textDisplay.innerHTML = JSON.stringify(cleanedOutputData);
 }
 
 // css stuff
@@ -679,8 +713,8 @@ function changePaginationOption() {
             textFrontDiv.parentNode.removeChild(textFrontDiv);
             textBackDiv.parentNode.removeChild(textBackDiv);
         }
-        textDisplay.style = 'width:500px; height:300px';
-        textDisplay.style.fontWeight = 'normal';
+        //textDisplay.style = 'width:500px; height:300px';
+        //textDisplay.style.fontWeight = 'normal';
         paginationValue = 0;
     }
     else {
@@ -744,10 +778,10 @@ function changePaginationOption() {
             textBackDiv.appendChild(textBackDisplay);
             textBackDiv.appendChild(labelBackDisplay);
         }
-        textDisplay.style = 'width:450px; height:300px';
+        //textDisplay.style = 'width:450px; height:300px';
         textDisplay.style.fontWeight = 'bold';
-        labelDisplay.style.fontSize = '10px';
-        labelDisplay.style = 'width:150px; height:300px';
+        //labelDisplay.style.fontSize = '10px';
+        //labelDisplay.style = 'width:150px; height:300px';
         //labelDisplay.style.fontWeight = 'bold';
     }
     textIndex--;
@@ -841,9 +875,9 @@ function wholeDocumentSwitchClicked() {
     console.log("wholeDocumentSwitchClicked")
 
     if (wholeDocumentSwitch.checked == true) {
-        textDisplay.value = '';
+        textDisplay.innerHTML = '';
         for (let i = 0; i < inputData.length; i++) {
-            textDisplay.value += inputData[i] + '\n'
+            textDisplay.innerHTML += inputData[i] + '\n'
         }
         textBackwardButton.disabled = true;
         textForwardButton.disabled = true;
@@ -856,7 +890,7 @@ function wholeDocumentSwitchClicked() {
         paginationDropdown.disabled = true;
     }
     else {
-        textDisplay.value = '';
+        textDisplay.innerHTML = '';
         textIndex--;
         progressTextDisplay();
         textBackwardButton.disabled = false;
@@ -1061,10 +1095,11 @@ async function authenticationOkayButtonClicked() {
 */
 
 document.addEventListener('mouseup', () => {
-    if (textDisplay.selectionStart !== textDisplay.selectionEnd) {
-        spanStartIndex = textDisplay.selectionStart;
-        spanEndIndex = textDisplay.selectionEnd;
-        console.log(textDisplay.value.slice(spanStartIndex, spanEndIndex));
+    let selection = document.getSelection()
+    spanStartIndex = selection.anchorOffset;
+    spanEndIndex = selection.focusOffset;
+    if (spanStartIndex !== spanEndIndex) {
+        console.log(textDisplay.innerText.slice(spanStartIndex, spanEndIndex));
         labelButtonArea.hidden = true;
         spanLabelButtonArea.hidden = false;
     }
