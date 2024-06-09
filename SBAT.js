@@ -23,6 +23,7 @@ let authenticatedUser = '';
 
 // HTML Elements
 let textDisplay = document.getElementById('textDisplay');
+let textAnnotation = document.getElementById('textAnnotation');
 //let labelDisplay = document.getElementById('labelDisplay');
 let downloadButton = document.getElementById('downloadButton');
 let fileSelector = document.getElementById('fileSelector');
@@ -305,6 +306,7 @@ function addLabel(label) {
     else {
         outputData[textIndex - 1].label = [];
         outputData[textIndex - 1].label.push(label);
+        textIndex--;
         progressTextDisplay();
     }
 }
@@ -313,12 +315,12 @@ function addSpanLabel(label) {
 
     console.log("addSpanLabel")
 
-    //let indices = spanStartIndex.toString() + "-" + spanEndIndex.toString()
-    if (outputData[textIndex - 1].spans.has([spanStartIndex, spanEndIndex])) {
-        outputData[textIndex - 1].spans.set([spanStartIndex, spanEndIndex], [...outputData[textIndex - 1].spans.get(indices), label])
+    let indices = spanStartIndex.toString() + "-" + spanEndIndex.toString()
+    if (outputData[textIndex - 1].spans.has(indices)) {
+        outputData[textIndex - 1].spans.set(indices, [...outputData[textIndex - 1].spans.get(indices), label])
     }
     else {
-        outputData[textIndex - 1].spans.set([spanStartIndex, spanEndIndex], [label])
+        outputData[textIndex - 1].spans.set(indices, [label])
     }
     /*
     span.indexes = [spanStartIndex, spanEndIndex];
@@ -469,6 +471,7 @@ function progressTextDisplay() {
                 }
                 selectLabelButtons();
                 textDisplay.innerHTML = inputData[textIndex];
+                textAnnotation.innerHTML = inputData[textIndex];
                 /*
                 labelDisplay.value = outputData[textIndex].label
                 if (outputData[textIndex].spans.length > 0) {
@@ -505,19 +508,21 @@ function progressTextDisplay() {
         else {
             if (textIndex < inputData.length) {
                 if (textIndex < 0) {
-                    //console.log("textIndex < 0")
                     textIndex++;
+                    textAnnotation.innerHTML = inputData[textIndex];
                     if (outputData[textIndex].spans.size > 0) {
-                        textDisplay.innerHTML = hightlightAtIndices(Array.from(outputData[textIndex].spans.keys()), inputData[textIndex])
+                        console.log("hightlight")
+                        textDisplay.innerHTML = highlightAtIndices(Array.from(outputData[textIndex].spans.keys()), inputData[textIndex])
                     }
                     else {
                         textDisplay.innerHTML = inputData[textIndex];
                     }
                 }
                 else {
-                    //console.log("textIndex >= 0")
+                    textAnnotation.innerHTML = inputData[textIndex];
                     if (outputData[textIndex].spans.size > 0) {
-                        textDisplay.innerHTML = hightlightAtIndices(Array.from(outputData[textIndex].spans.keys()), inputData[textIndex])
+                        console.log("hightlight")
+                        textDisplay.innerHTML = highlightAtIndices(Array.from(outputData[textIndex].spans.keys()), inputData[textIndex])
                     }
                     else {
                         textDisplay.innerHTML = inputData[textIndex];
@@ -568,14 +573,21 @@ function progressTextDisplay() {
     }
 }
 
-function hightlightAtIndices(indices, text) {
-
-    let result = indices.reduce((str, [start, end]) => {
-        str[start] = `<span class="bold">${str[start]}`;
-        str[end] = `${str[end]}</span>`;
-        return str;
-    }, text.split("")).join("");
-    console.log(result)
+function highlightAtIndices(indices, text) {
+    // append span tag to each character at start and end index
+    let result = indices.reduce(
+        (str, indice) => {
+            let ids = indice.split("-")
+            const labels = outputData[textIndex].spans.get(indice).join(", ")
+            str[ids[0]] = `<span class="bold">${str[ids[0]]}`;
+            str[ids[1]] = `${str[ids[1]]}</span><span class="small">${labels}</span>`;
+            return str;
+        },
+        // initial value
+        text.split("")
+    ).join("");
+    console.log(indices)
+    console.log(text)
     return result
 
 }
@@ -590,6 +602,7 @@ function displayOutput() {
         }
     }
     textDisplay.innerHTML = JSON.stringify(cleanedOutputData);
+    annotationArea.value = ""
 }
 
 // css stuff
@@ -1097,9 +1110,8 @@ async function authenticationOkayButtonClicked() {
 document.addEventListener('mouseup', () => {
     let selection = document.getSelection()
     spanStartIndex = selection.anchorOffset;
-    spanEndIndex = selection.focusOffset;
-    if (spanStartIndex !== spanEndIndex) {
-        console.log(textDisplay.innerText.slice(spanStartIndex, spanEndIndex));
+    spanEndIndex = selection.focusOffset - 1;
+    if (spanStartIndex !== spanEndIndex + 1) {
         labelButtonArea.hidden = true;
         spanLabelButtonArea.hidden = false;
     }
