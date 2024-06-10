@@ -68,15 +68,14 @@ textarea {
     padding: 25px;
 }
 
-#annotationArea {
+#centerColumn {
+    display: flex;
+    flex-direction: column;
     padding: 25px;
 }
 
 #textDisplay {
     background: #f9f9f9;
-    margin: 1.5em 10px;
-    padding: 0.5em 10px;
-    quotes: "\201C" "\201D" "\2018" "\2019";
 }
 
 #textAnnotation {
