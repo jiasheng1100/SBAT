@@ -1,5 +1,10 @@
-import { Octokit } from "https://esm.sh/octokit@2.1.0";
+//import { Octokit } from "https://esm.sh/octokit@2.1.0";
 
+
+//    <script type="module" src="Brat.js"></script>
+//    <script type="module" src="index.js"></script>
+//    <script src="jquery-bbq.js"></script>
+//  <script src="./client/lib/node-jquery-1.7.1.js"></script>
 /*
 let inputData = ['This movie sucks.', 'I loved it!', 'A waste of time.',
                 'Truly awful', 'Most hilarious movie ever'];
