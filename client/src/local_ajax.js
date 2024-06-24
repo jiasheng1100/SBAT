@@ -1,446 +1,360 @@
-var LocalAjax = (function ($, window, undefined) {
-    // dispatcher: An event dispatcher for managing events.
-    // maxFragmentLength: A parameter to handle annotations that exceed a specified length.
-    var LocalAjax = function (dispatcher, maxFragmentLength) {
-        var that = this;
+class LocalAjax {
+    constructor(dispatcher, maxFragmentLength) {
+        this.dispatcher = dispatcher;
+        this.maxFragmentLength = maxFragmentLength;
+        this.collection = null;
+        this.document = null;
 
-        // Recursively searches through entity types to find the matching type.
-        var findType = function (entityTypes, type) {
-            for (var i = 0; i < entityTypes.length; i++) {
-                var entityType = entityTypes[i];
-                if (entityType.type === type) {
-                    return entityType;
-                } else {
-                    if (entityType.children && entityType.children.length) {
-                        var result = findType(entityType.children, type);
-                        if (result !== null) {
-                            return result;
-                        }
-                    }
+        this.dispatcher.on('ajax', this, this.localExecution.bind(this));
+    }
+
+    findType(entityTypes, type) {
+        for (const entityType of entityTypes) {
+            if (entityType.type === type) {
+                return entityType;
+            } else if (entityType.children && entityType.children.length) {
+                const result = this.findType(entityType.children, type);
+                if (result !== null) {
+                    return result;
                 }
             }
-            return null;
-        };
+        }
+        return null;
+    }
 
-        // Creates a new annotation and handles its attributes, offsets, and comments.
-        // triggers, entitites, attributes, comments
-        var createAnnotation = function (data) {
-            var attrs = JSON.parse(data.attributes),
-                offsets = JSON.parse(data.offsets),
-                e_type = findType(data.collection.entity_types, data.type);
-            e_id = "";//Entity or Trigger
-            if (!e_type) {
-                //Trigger
-                e_type = data.collection.event_types.find(x => x.type === data.type);
-                if (e_type) {
-                    var trigger_id = "T" + (that.document.triggers.length + 1); //TODO: must absolutely be unique
-                    e_id = "E" + (that.document.triggers.length + 1); //TODO: must absolutely be unique
-                    data.document.triggers.push([
-                        trigger_id,
-                        data.type,
-                        offsets
-                    ]);
-                    data.document.events.push([
-                        e_id,
-                        trigger_id,
-                        []
-                    ]);
-                }
-            } else {
-                var e_id = "N" + (that.document.entities.length + 1), //TODO: must absolutely be unique
-                    new_offsets = splitTooLongFragment(offsets, data, e_id);
+    createAnnotation(data) {
+        const attrs = JSON.parse(data.attributes);
+        const offsets = JSON.parse(data.offsets);
+        let e_type = this.findType(data.collection.entity_types, data.type);
+        let e_id = "";
 
-                //Entity
-                data.document.entities.push([
+        if (!e_type) {
+            e_type = data.collection.event_types.find(x => x.type === data.type);
+            if (e_type) {
+                const trigger_id = `T${this.document.triggers.length + 1}`;
+                e_id = `E${this.document.triggers.length + 1}`;
+                data.document.triggers.push([trigger_id, data.type, offsets]);
+                data.document.events.push([e_id, trigger_id, []]);
+            }
+        } else {
+            e_id = `N${this.document.entities.length + 1}`;
+            const new_offsets = this.splitTooLongFragment(offsets, data, e_id);
+            data.document.entities.push([e_id, data.type, new_offsets]);
+        }
+
+        for (const key in attrs) {
+            if (attrs.hasOwnProperty(key) && attrs[key]) {
+                data.document.attributes.push([
+                    `A${this.document.attributes.length + 1}`,
+                    key,
                     e_id,
-                    data.type,
-                    new_offsets
+                    attrs[key]
                 ]);
             }
+        }
 
-            for (var key in attrs) {
+        if (data.comment.length) {
+            data.document.comments.push([e_id, "AnnotatorNotes", data.comment]);
+        }
+
+        return {
+            data: data,
+            action: data.action,
+            annotations: {
+                source_files: data.document.source_files,
+                modifications: data.document.modifications,
+                normalizations: data.document.normalizations,
+                text: data.document.text,
+                entities: data.document.entities,
+                attributes: data.document.attributes,
+                relations: data.document.relations,
+                triggers: data.document.triggers,
+                events: data.document.events,
+                comments: data.document.comments
+            },
+            edited: [[e_id]],
+            messages: [],
+            protocol: 1
+        };
+    }
+
+    splitTooLongFragment(offsets, data, e_id) {
+        let new_offsets = [];
+
+        if (
+            this.maxFragmentLength > 0 &&
+            offsets.find(x => x[1] - x[0] > this.maxFragmentLength)
+        ) {
+            offsets.forEach(fragment => {
+                const from = fragment[0];
+                const to = fragment[1];
+                const subtext = data.document.text.substring(from, to);
+
+                if (to - from > this.maxFragmentLength) {
+                    const from_end = from + subtext.indexOf(' ');
+                    const to_start = to - (subtext.length - (subtext.lastIndexOf(' ') + 1));
+                    new_offsets.push([from, from_end]);
+                    new_offsets.push([to_start, to]);
+
+                    data.document.attributes.push([
+                        `A${this.document.attributes.length + 1}`,
+                        LONG_ANNOTATION_CONST,
+                        e_id,
+                        [from, to]
+                    ]);
+                } else {
+                    new_offsets.push([from, to]);
+                }
+            });
+        } else {
+            new_offsets = offsets;
+        }
+
+        return new_offsets;
+    }
+
+    editAnnotation(data) {
+        let e_type = {};
+        const attrs = JSON.parse(data.attributes);
+        const offsets = JSON.parse(data.offsets);
+
+        if (data.id.startsWith("E")) {
+            const annotation = data.document.events.find(x => x[0] === data.id);
+            const trigger_id = annotation[1];
+            const trigger = data.document.triggers.find(x => x[0] === trigger_id);
+            trigger[1] = data.type;
+            trigger[2] = offsets;
+            e_type = data.collection.event_types.find(x => x.type === data.type);
+        } else if (data.id.startsWith("N")) {
+            const entity = data.document.entities.find(x => x[0] === data.id);
+            entity[1] = data.type;
+            entity[2] = this.splitTooLongFragment(offsets, data, data.id);
+            e_type = this.findType(data.collection.entity_types, data.type);
+        }
+
+        if (e_type) {
+            const existing_attrs = data.document.attributes.filter(x => x[2] === data.id);
+            existing_attrs.forEach(attr => {
+                const index = data.document.attributes.indexOf(attr);
+                data.document.attributes.splice(index, 1);
+            });
+
+            for (const key in attrs) {
                 if (attrs.hasOwnProperty(key) && attrs[key]) {
                     data.document.attributes.push([
-                        "A" + (that.document.attributes.length + 1), //TODO: must absolutely be unique,
+                        `A${this.document.attributes.length + 1}`,
                         key,
-                        e_id,
+                        data.id,
                         attrs[key]
                     ]);
                 }
             }
+
             if (data.comment.length) {
-                data.document.comments.push([
-                    e_id,
-                    "AnnotatorNotes",
-                    data.comment
-                ]);
+                const comment = data.document.comments.find(x => x[0] === data.id);
+                if (comment) {
+                    comment[2] = data.comment;
+                } else {
+                    data.document.comments.push([data.id, "AnnotatorNotes", data.comment]);
+                }
             }
+
             return {
                 data: data,
                 action: data.action,
                 annotations: {
-                    "source_files": data.document.source_files,
-                    "modifications": data.document.modifications,
-                    "normalizations": data.document.normalizations,
-                    "text": data.document.text,
-                    "entities": data.document.entities,
-                    "attributes": data.document.attributes,
-                    "relations": data.document.relations,
-                    "triggers": data.document.triggers,
-                    "events": data.document.events,
-                    "comments": data.document.comments
+                    source_files: data.document.source_files,
+                    modifications: data.document.modifications,
+                    normalizations: data.document.normalizations,
+                    text: data.document.text,
+                    entities: data.document.entities,
+                    attributes: data.document.attributes,
+                    relations: data.document.relations,
+                    triggers: data.document.triggers,
+                    events: data.document.events,
+                    comments: data.document.comments
                 },
-                edited: [[e_id]],
+                edited: [[data.id]],
                 messages: [],
                 protocol: 1
             };
-        };
+        } else {
+            return {}; //TODO: Error handling
+        }
+    }
 
-        // Ensures that annotation fragments do not exceed a maximum length.
-        // Validate max fragment length based on options.maxFragmentLength
-        // Use discontinguity to fix long annotations glitches before calling BRAT rendering engine.
-        var splitTooLongFragment = function (offsets, data, e_id) {
-            var new_offsets = [];
-
-            if (maxFragmentLength > 0 && offsets.find(x => (x[1] - x[0]) > maxFragmentLength)) {
-                offsets.forEach(function (fragment) {
-                    var from = fragment[0],
-                        to = fragment[1],
-                        subtext = data.document.text.substring(from, to);
-
-                    if (to - from > maxFragmentLength) {
-                        var from_end = from + (subtext.indexOf(' ')),
-                            to_start = to - (subtext.length - (subtext.lastIndexOf(' ') + 1));
-                        new_offsets.push([from, from_end]);
-                        new_offsets.push([to_start, to]);
-
-                        // Add special attribute for symbolic representation
-                        data.document.attributes.push([
-                            "A" + (that.document.attributes.length + 1), //TODO: must absolutely be unique,
-                            LONG_ANNOTATION_CONST,
-                            e_id,
-                            [from, to]
-                        ]);
-                    } else {
-                        new_offsets.push([from, to]);
-                    }
-                });
-            } else {
-                new_offsets = offsets;
+    deleteAnnotation(data) {
+        const entities = data.document.entities;
+        for (let i = 0; i < entities.length; i++) {
+            if (entities[i][0] === data.id) {
+                entities.splice(i, 1);
+                break;
             }
-            return new_offsets;
-        };
+        }
 
-        // Edits existing annotations, updates attributes, and handles comments.
-        var editAnnotation = function (data) {
-            var e_type = {}, //Entity or Trigger
-                attrs = JSON.parse(data.attributes),
-                offsets = JSON.parse(data.offsets);
-
-            //Edit annotation TODO: Validation is based on id, fix this
-            if (data.id.substring(0, 1) == "E") {
-                //Event annotation
-                //data.normalisations ??
-                var annotation = data.document.events.find(x => x[0] === data.id);
-                var trigger_id = annotation[1];
-                var trigger = data.document.triggers.find(x => x[0] === trigger_id);
-                trigger[1] = data.type;
-                trigger[2] = offsets;
-                e_type = data.collection.event_types.find(x => x.type === data.type);
-            } else if (data.id.substring(0, 1) == "N") {
-                //Entity annotation
-                var entity = data.document.entities.find(x => x[0] === data.id);
-                entity[1] = data.type;
-                entity[2] = splitTooLongFragment(offsets, data, data.id);
-                e_type = findType(data.collection.entity_types, data.type);
-
-            } else {
-                //TODO: Error
+        const relations = data.document.relations;
+        for (let i = relations.length - 1; i >= 0; i--) {
+            const relation = relations[i][2];
+            if (relation[0][1] === data.id || relation[1][1] === data.id) {
+                relations.splice(i, 1);
             }
+        }
+
+        return {
+            action: data.action,
+            annotations: data.document,
+            edited: [],
+            messages: [],
+            protocol: 1
+        };
+    }
+
+    createRelation(data) {
+        let e_type = data.collection.relation_types.find(x => x.type === data.type);
+
+        if (!e_type) {
+            e_type = data.document.events.find(x => x[0] === data.origin);
             if (e_type) {
-                //Removed all attributes for this particular annotation id
-                var existing_attrs = data.document.attributes.filter(x => x[2] === data.id);
-                existing_attrs.forEach(function (attr) {
-                    var index = data.document.attributes.indexOf(x => x[0] === attr[0]); //TODO: this always returns -1
-                    data.document.attributes.splice(index, 1);
-                });
-
-                //Re-add all attributes
-                for (var key in attrs) {
-                    if (attrs.hasOwnProperty(key) && attrs[key]) {
-                        existing_attrs.find(x => x[1] === key);
-
-                        data.document.attributes.push([
-                            "A" + (that.document.attributes.length + 1), //TODO: must absolutely be unique,
-                            key,
-                            data.id,
-                            attrs[key]
-                        ]);
-                    }
-                }
-
-                //Add/Edit comment content
-                if (data.comment.length) {
-                    var comment = data.document.comments.find(x => x[0] === data.id);
-                    if (comment) {
-                        //Edit
-                        comment[2] = data.comment;
-                    } else {
-                        //Add
-                        data.document.comments.push([
-                            data.id,
-                            "AnnotatorNotes",
-                            data.comment
-                        ]);
-                    }
-                }
-                //Comments && Attributes are deactivated for relations at this point
-
-                return {
-                    data: data,
-                    action: data.action,
-                    annotations: {
-                        "source_files": data.document.source_files,
-                        "modifications": data.document.modifications,
-                        "normalizations": data.document.normalizations,
-                        "text": data.document.text,
-                        "entities": data.document.entities,
-                        "attributes": data.document.attributes,
-                        "relations": data.document.relations,
-                        "triggers": data.document.triggers,
-                        "events": data.document.events,
-                        "comments": data.document.comments
-                    },
-                    edited: [[data.id]],
-                    messages: [],
-                    protocol: 1
-                };
-            } else {
-                return {}; //TODO: Error handling
+                e_type[2].push([data.type, data.target]);
             }
-
-        };
-
-        // Deletes an annotation and removes related relations and attributes. 
-        var deleteAnnotation = function (data) {
-            // delete the entity. TODO: also delete events etc
-            var entities = data.document.entities;
-            for (var i = 0; i < entities.length; i++) {
-                if (entities[i][0] === data.id) {  // entity format [id, type, offsets], e.g. ["N1", "Person", Array[2]]
-                    entities.splice(i, 1);
-                    break;
-                }
-            }
-            // delete relations containing the entity TODO: attributes etc?
-            var relations = data.document.relations;
-            for (var i = relations.length - 1; i >= 0; i--) {
-                // relation format: ["R1", "Friend", Array[2]]
-                var relation = relations[i][2];  // e.g. [['From', "N1"], ['To', 'N2']]
-                if (relation[0][1] === data.id || relation[1][1] === data.id) {
-                    relations.splice(i, 1);
-                }
-            }
-
-            return {
-                action: data.action,
-                annotations: data.document,
-                edited: [],
-                messages: [],
-                protocol: 1
-            };
-        };
-
-        var createRelation = function (data) {
-            var e_type = data.collection.relation_types.find(x => x.type === data.type); //Entity or Event
-
-            if (!e_type) {
-                //Event relation
-                /*data.collection.event_types.forEach(function(event){
-                    event.arcs.forEach(function(eRelation){
-                        if(eRelation.type === data.type){
-                            e_type = event;
-                            //TODO: Exit loop
-                        }
-                    })
-                });*/
-                e_type = data.document.events.find(x => x[0] === data.origin);
-                if (e_type) {
-                    e_type[2].push([
-                        data.type,
-                        data.target
-                    ]);
-                }
-            } else {
-                //Entity relation
-                var obj =
-                    [
-                        "R" + (that.document.relations.length + 1), //TODO: must absolutely me unique
-                        data.type,
-                        [
-                            [e_type.args[0].role, data.origin],
-                            [e_type.args[1].role, data.target]]
-                    ];
-                data.document.relations.push(obj);
-            }
-            return {
-                action: data.action,
-                annotations: {
-                    "source_files": data.document.source_files,
-                    "modifications": data.document.modifications,
-                    "normalizations": data.document.normalizations,
-                    "text": data.document.text,
-                    "entities": data.document.entities,
-                    "attributes": data.document.attributes,
-                    "relations": data.document.relations,
-                    "triggers": data.document.triggers,
-                    "events": data.document.events
-                    //"ctime": 1.0,
-                    //"collection": "",
-                    //"document": "",
-                    //"equivs": [],
-                    //"mtime": 1.0,
-                    //"sentences_offsets": [],
-                    //"token_offsets": [],
-                },
-                edited: [[data.origin], [data.target]],
-                messages: [],
-                protocol: 1
-            };
-        };
-
-        var editRelation = function (data) {
-            var e_type = data.collection.relation_types.find(x => x.type === data.type); //Entity or Event
-
-            if (!e_type) {
-                //Event relation
-                e_type = data.document.events.find(x => x[0] === data.origin);
-                if (e_type) {
-
-                }
-            } else {
-                //Entity relation
-                var relation = data.document.relations.find(x => x[1] === data.old_type && x[2][0][1] === data.origin && x[2][1][1] === data.old_target);
-                relation[1] = data.type;
-                relation[2] = [
+        } else {
+            const obj = [
+                `R${this.document.relations.length + 1}`,
+                data.type,
+                [
                     [e_type.args[0].role, data.origin],
                     [e_type.args[1].role, data.target]
-                ];
-            }
+                ]
+            ];
+            data.document.relations.push(obj);
+        }
 
-            return {
-                action: data.action,
-                annotations: {
-                    "source_files": data.document.source_files,
-                    "modifications": data.document.modifications,
-                    "normalizations": data.document.normalizations,
-                    "text": data.document.text,
-                    "entities": data.document.entities,
-                    "attributes": data.document.attributes,
-                    "relations": data.document.relations,
-                    "triggers": data.document.triggers,
-                    "events": data.document.events,
-                    "comments": data.document.comments
-                },
-                edited: [[data.origin], [data.target]],
-                messages: [],
-                protocol: 1
-            };
-
+        return {
+            action: data.action,
+            annotations: {
+                source_files: data.document.source_files,
+                modifications: data.document.modifications,
+                normalizations: data.document.normalizations,
+                text: data.document.text,
+                entities: data.document.entities,
+                attributes: data.document.attributes,
+                relations: data.document.relations,
+                triggers: data.document.triggers,
+                events: data.document.events
+            },
+            edited: [[data.origin], [data.target]],
+            messages: [],
+            protocol: 1
         };
+    }
 
-        // Handles various actions (e.g., creating, editing, deleting annotations) and posts the results through the dispatcher.
-        var localExecution = function (data, callback, merge) {
-            dispatcher.post('spin');
-            dispatcher.post('local-ajax-begin', [data]);
-            that.collection = data.collection;
-            that.document = data.document;
-            var response = {};
+    editRelation(data) {
+        let e_type = data.collection.relation_types.find(x => x.type === data.type);
 
-            switch (data.action) {
-                case "getDocument":
-                    //TODO
-                    break;
-                case "loadConf":
-                    //TODO
-                    break;
-                case "getCollectionInformation":
-                    //TODO
-                    break;
-                case "createArc":
-                    //TODO: Validate model with inputs
-                    if (data.old_target || data.old_type) {
-                        response = editRelation(data);
-                    } else {
-                        response = createRelation(data);
-                    }
-                    break;
-                case "deleteArc":
+        if (!e_type) {
+            e_type = data.document.events.find(x => x[0] === data.origin);
+        } else {
+            const relation = data.document.relations.find(
+                x => x[1] === data.old_type && x[2][0][1] === data.origin && x[2][1][1] === data.old_target
+            );
+            relation[1] = data.type;
+            relation[2] = [
+                [e_type.args[0].role, data.origin],
+                [e_type.args[1].role, data.target]
+            ];
+        }
+
+        return {
+            action: data.action,
+            annotations: {
+                source_files: data.document.source_files,
+                modifications: data.document.modifications,
+                normalizations: data.document.normalizations,
+                text: data.document.text,
+                entities: data.document.entities,
+                attributes: data.document.attributes,
+                relations: data.document.relations,
+                triggers: data.document.triggers,
+                events: data.document.events,
+                comments: data.document.comments
+            },
+            edited: [[data.origin], [data.target]],
+            messages: [],
+            protocol: 1
+        };
+    }
+
+    localExecution(data, callback, merge) {
+        this.dispatcher.post('spin');
+        this.dispatcher.post('local-ajax-begin', [data]);
+        this.collection = data.collection;
+        this.document = data.document;
+        let response = {};
+
+        switch (data.action) {
+            case "getDocument":
                 //TODO
-                case "reverseArc":
-                    //TODO
-                    break;
-                case "createSpan":
-                    //Edit and Created actions on Entities as well as Triggers(Events)
-                    //TODO: Validate model with inputs
-                    if (data.id) {
-                        response = editAnnotation(data);
-                    } else {
-                        response = createAnnotation(data);
-                    }
-                    break;
-                case "deleteSpan":
-                    response = deleteAnnotation(data);
-                    break;
-                case "deleteFragmentxyz?":
-                    //TODO
-                    break;
-                case "splitSpan":
-                    //TODO
-                    break;
-                case "tag":
-                    //TODO ??
-                    var obj = {
-                        collection: data.collection,
-                        document: data.document,
-                        tagger: data.tagger
-                    };
-                case "login":
-                case "logout":
-                case "whoami":
-                case "normGetName":
-                case "normSearch":
-                case "suggestSpanTypes":
-                case "importDocument":
-                case "deleteDocument":
-                case "deleteCollection":
-                case "undo":
-                case "normData":
-                case "InDocument":
-                case "InCollection":
-                case "storeSVG":
-                case "getDocumentTimestamp":
-                case "saveConf":
-                    break;
-                default:
-                    //TODO
-                    break;
-            }
+                break;
+            case "loadConf":
+                //TODO
+                break;
+            case "getCollectionInformation":
+                //TODO
+                break;
+            case "createArc":
+                response = data.old_target || data.old_type ? this.editRelation(data) : this.createRelation(data);
+                break;
+            case "deleteArc":
+            //TODO
+            case "reverseArc":
+                //TODO
+                break;
+            case "createSpan":
+                response = data.id ? this.editAnnotation(data) : this.createAnnotation(data);
+                break;
+            case "deleteSpan":
+                response = this.deleteAnnotation(data);
+                break;
+            case "deleteFragmentxyz?":
+                //TODO
+                break;
+            case "splitSpan":
+                //TODO
+                break;
+            case "tag":
+                //TODO ??
+                const obj = {
+                    collection: data.collection,
+                    document: data.document,
+                    tagger: data.tagger
+                };
+                break;
+            case "login":
+            case "logout":
+            case "whoami":
+            case "normGetName":
+            case "normSearch":
+            case "suggestSpanTypes":
+            case "importDocument":
+            case "deleteDocument":
+            case "deleteCollection":
+            case "undo":
+            case "normData":
+            case "InDocument":
+            case "InCollection":
+            case "storeSVG":
+            case "getDocumentTimestamp":
+            case "saveConf":
+                break;
+            default:
+                //TODO
+                break;
+        }
 
-            dispatcher.post(0, callback, [response]);
-            dispatcher.post('local-ajax-done', [response]);
-            dispatcher.post('unspin');
-        };
+        this.dispatcher.post(0, callback, [response]);
+        this.dispatcher.post('local-ajax-done', [response]);
+        this.dispatcher.post('unspin');
+    }
+}
 
-        // registers the localExecution method to handle ajax events, 
-        // ensuring that local data operations are performed when an ajax event is dispatched.
-        dispatcher.
-            on('ajax', localExecution);
-    };
-
-    return LocalAjax;
-})(jQuery, window);
-
-// BRAT STANDALONE LIBRARY BEGIN
-// Browserify export
-module.exports = LocalAjax;
-// BRAT STANDALONE LIBRARY END
+export default LocalAjax;

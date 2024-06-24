@@ -2,138 +2,112 @@
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 // TODO: does 'arguments.callee.caller' work?
 
-var Dispatcher = (function ($, window, undefined) {
-    var Dispatcher = function () {
-        var that = this;
+class Dispatcher {
+    constructor() {
+        this.table = {};
+        Dispatcher.dispatchers.push(this); // Add the current instance to the static array of dispatchers
+    }
 
-        var table = {};
+    on(message, host, handler) {
+        if (handler === undefined) {
+            throw new Error("Handler must be defined");
+        }
+        if (!this.table[message]) {
+            this.table[message] = [];
+        }
+        this.table[message].push([host, handler]);
+        return this;
+    }
 
-        var on = function (message, host, handler) {
-            if (handler === undefined) {
-                handler = host;
-                host = arguments.callee.caller;
-            }
-            if (table[message] === undefined) {
-                table[message] = [];
-            }
-            table[message].push([host, handler]);
-            return this;
-        };
+    post(asynch, message, args, returnType) {
+        if (typeof asynch !== 'number') {
+            returnType = args;
+            args = message;
+            message = asynch;
+            asynch = null;
+        }
+        if (args === undefined) {
+            args = [];
+        }
+        const results = [];
 
-        // Notify listeners that we encountered an error in an asynch call
-        var inAsynchError = false; // To avoid error avalanches
-        var handleAsynchError = function (e) {
-            if (!inAsynchError) {
-                inAsynchError = true;
-                // TODO: Hook printout into dispatch elsewhere?
-                console.warn('Handled async error:', e);
-                that.post('dispatchAsynchError', [e]);
-                inAsynchError = false;
-            } else {
-                console.warn('Dropped asynch error:', e);
-            }
-        };
-
-        // handle the propagation of messages or functions to interested parties, with support for both synchronous and asynchronous execution
-        var post = function (asynch, message, args, returnType) {
-            // Parameter Adjustment
-            if (typeof (asynch) !== 'number') {
-                // no asynch parameter
-                returnType = args;
-                args = message;
-                message = asynch;
-                asynch = null;
-            }
-            // default Arguments
-            if (args === undefined) {
-                args = [];
-            }
-            var results = [];
-            // DEBUG: if (typeof(message) != "string" || !(message.match(/mouse/) || message == "hideComment")) console.log(message, args);
-
-            // If message is a function, it is executed directly
-            if (typeof (message) === 'function') {
-                // someone was lazy and sent a simple function
-                var host = arguments.callee.caller;
-                if (asynch !== null) {
-                    result = setTimeout(function () {
-                        /*try {*/
+        if (typeof message === 'function') {
+            const host = this.post.caller;
+            let result;
+            if (asynch !== null) {
+                result = setTimeout(() => {
+                    try {
                         message.apply(host, args);
-                        /*} catch(e) {
-                          that.handleAsynchError(e);
-                        }*/
-                    }, asynch);
-                } else {
-                    result = message.apply(host, args);
-                }
-                results.push(result);
+                    } catch (e) {
+                        this.handleAsynchError(e);
+                    }
+                }, asynch);
             } else {
-                // a proper message, propagate to all interested parties
-                var todo = table[message];
-                if (todo !== undefined) {
-                    $.each(todo, function (itemNo, item) {
-                        var result;
-                        if (asynch !== null) {
-                            result = setTimeout(function () {
-                                /*try {*/
+                result = message.apply(host, args);
+            }
+            results.push(result);
+        } else {
+            const todo = this.table[message];
+            if (todo) {
+                todo.forEach(item => {
+                    let result;
+                    if (asynch !== null) {
+                        result = setTimeout(() => {
+                            try {
                                 item[1].apply(item[0], args);
-                                /*} catch (e) {
-                                  that.handleAsynchError(e);
-                                }*/
-                            }, asynch);
-                        } else {
-                            result = item[1].apply(item[0], args);
-                        }
-                        results.push(result);
-                    });
-                    /* DEBUG
-                              } else {
-                                console.warn('Message ' + message + ' has no subscribers.'); // DEBUG
-                    */
-                }
+                            } catch (e) {
+                                this.handleAsynchError(e);
+                            }
+                        }, asynch);
+                    } else {
+                        result = item[1].apply(item[0], args);
+                    }
+                    results.push(result);
+                });
             }
-            if (returnType == 'any') {
-                var i = results.length;
-                while (i--) {
-                    if (results[i] !== false) return results[i];
-                }
-                return false;
+        }
+
+        if (returnType === 'any') {
+            for (let i = results.length - 1; i >= 0; i--) {
+                if (results[i] !== false) return results[i];
             }
-            if (returnType == 'all') {
-                var i = results.length;
-                while (i--) {
-                    if (results[i] === false) return results[i];
-                }
+            return false;
+        }
+
+        if (returnType === 'all') {
+            for (let i = results.length - 1; i >= 0; i--) {
+                if (results[i] === false) return results[i];
             }
-            return results;
-        };
+        }
 
-        var proxy = function (destination, message) {
-            this.on(message, function () {
-                destination.post(message, Array.prototype.slice.call(arguments));
-            });
-        };
+        return results;
+    }
 
-        var dispatcher = {
-            on: on,
-            post: post,
-            proxy: proxy,
-        };
-        Dispatcher.dispatchers.push(dispatcher);
-        return dispatcher;
-    };
+    proxy(destination, message) {
+        this.on(message, (...args) => {
+            destination.post(message, args);
+        });
+    }
 
-    Dispatcher.dispatchers = [];
-    Dispatcher.post = function (asynch, message, args, returnType) {
-        $.each(Dispatcher.dispatchers, function (dispatcherNo, dispatcher) {
+    handleAsynchError(e) {
+        if (!this.inAsynchError) {
+            this.inAsynchError = true;
+            console.warn('Handled async error:', e);
+            this.post('dispatchAsynchError', [e]);
+            this.inAsynchError = false;
+        } else {
+            console.warn('Dropped asynch error:', e);
+        }
+    }
+
+    static post(asynch, message, args, returnType) {
+        Dispatcher.dispatchers.forEach(dispatcher => {
             dispatcher.post(asynch, message, args, returnType);
         });
-    };
+    }
+}
 
-    return Dispatcher;
-})(jQuery, window);
+Dispatcher.dispatchers = [];
+Dispatcher.prototype.inAsynchError = false;
 
-// BRAT STANDALONE LIBRARY BEGIN
-// Browserify export
-module.exports = Dispatcher;
-// BRAT STANDALONE LIBRARY END
+export default Dispatcher;

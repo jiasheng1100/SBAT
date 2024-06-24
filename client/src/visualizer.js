@@ -23,8 +23,6 @@ var Visualizer = (function ($, window, undefined) {
         this.span = span;
         this.from = from;
         this.to = to;
-        // this.towerId = undefined;
-        // this.drawOrder = undefined;
     };
 
     var Span = function (id, type, offsets, generalType) {
@@ -35,36 +33,6 @@ var Visualizer = (function ($, window, undefined) {
         this.generalType = generalType;
         this.offsets = offsets;
         this.headFragment = null;
-        // this.from = undefined;
-        // this.to = undefined;
-        // this.wholeFrom = undefined;
-        // this.wholeTo = undefined;
-        // this.headFragment = undefined;
-        // this.chunk = undefined;
-        // this.marked = undefined;
-        // this.avgDist = undefined;
-        // this.curly = undefined;
-        // this.comment = undefined; // { type: undefined, text: undefined };
-        // this.annotatorNotes = undefined;
-        // this.drawCurly = undefined;
-        // this.glyphedLabelText = undefined;
-        // this.group = undefined;
-        // this.height = undefined;
-        // this.highlightPos = undefined;
-        // this.indexNumber = undefined;
-        // this.labelText = undefined;
-        // this.nestingDepth = undefined;
-        // this.nestingDepthLR = undefined;
-        // this.nestingDepthRL = undefined;
-        // this.nestingHeight = undefined;
-        // this.nestingHeightLR = undefined;
-        // this.nestingHeightRL = undefined;
-        // this.rect = undefined;
-        // this.rectBox = undefined;
-        // this.refedIndexSum = undefined;
-        // this.right = undefined;
-        // this.totaldist = undefined;
-        // this.width = undefined;
         this.initContainers(offsets);
     };
 
@@ -99,9 +67,6 @@ var Visualizer = (function ($, window, undefined) {
         } else if (klass == "relation") {
             this.relation = true;
         }
-        // this.leftSpans = undefined;
-        // this.rightSpans = undefined;
-        // this.annotatorNotes = undefined;
     };
 
     var Chunk = function (index, text, from, to, space, spans) {
@@ -111,16 +76,6 @@ var Visualizer = (function ($, window, undefined) {
         this.to = to;
         this.space = space;
         this.fragments = [];
-        // this.sentence = undefined;
-        // this.group = undefined;
-        // this.highlightGroup = undefined;
-        // this.markedTextStart = undefined;
-        // this.markedTextEnd = undefined;
-        // this.nextSpace = undefined;
-        // this.right = undefined;
-        // this.row = undefined;
-        // this.textX = undefined;
-        // this.translation = undefined;
     }
 
     var Arc = function (eventDesc, role, dist, eventNo) {
@@ -3158,21 +3113,21 @@ var Visualizer = (function ($, window, undefined) {
         }
 
         dispatcher.
-            on('collectionChanged', collectionChanged).
-            on('collectionLoaded', collectionLoaded).
-            on('renderData', renderData).
-            on('triggerRender', triggerRender).
-            on('requestRenderData', requestRenderData).
-            on('isReloadOkay', isReloadOkay).
-            on('resetData', resetData).
-            on('abbrevs', setAbbrevs).
-            on('textBackgrounds', setTextBackgrounds).
-            on('layoutDensity', setLayoutDensity).
-            on('svgWidth', setSvgWidth).
-            on('current', gotCurrent).
-            on('clearSVG', clearSVG).
-            on('mouseover', onMouseOver).
-            on('mouseout', onMouseOut);
+            on('collectionChanged', this, collectionChanged).
+            on('collectionLoaded', this, collectionLoaded).
+            on('renderData', this, renderData).
+            on('triggerRender', this, triggerRender).
+            on('requestRenderData', this, requestRenderData).
+            on('isReloadOkay', this, isReloadOkay).
+            on('resetData', this, resetData).
+            on('abbrevs', this, setAbbrevs).
+            on('textBackgrounds', this, setTextBackgrounds).
+            on('layoutDensity', this, setLayoutDensity).
+            on('svgWidth', this, setSvgWidth).
+            on('current', this, gotCurrent).
+            on('clearSVG', this, clearSVG).
+            on('mouseover', this, onMouseOver).
+            on('mouseout', this, onMouseOut);
     };
 
     Visualizer.areFontsLoaded = false;
@@ -3189,5 +3144,5 @@ var Visualizer = (function ($, window, undefined) {
 
 // BRAT STANDALONE LIBRARY BEGIN
 // Browserify export
-module.exports = Visualizer;
+export default Visualizer
 // BRAT STANDALONE LIBRARY END

@@ -2,7 +2,7 @@
 //const defaultExport = BratFrontendEditor.default;
 import { BratFrontendEditor } from "./Brat.js"
 
-let centerColumn = document.getElementById('centerColumn')
+//let centerColumn = document.getElementById('centerColumn')
 
 var collData = {
     "messages": [],
@@ -409,11 +409,13 @@ var options = {
     showTooltip: true
 };
 
-function window_onload() {
-    var brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData, options);
-    brat.dispatcher.on('sglclick', function (data) {
-        console.log(data)
+if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        let brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData, options);
+        //brat.init()
+        console.log(brat)
+        brat.dispatcher.on('sglclick', function (data) {
+            console.log(data);
+        });
     });
 }
-
-centerColumn.addEventListener("load", window_onload())
