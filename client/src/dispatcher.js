@@ -32,7 +32,7 @@ class Dispatcher {
         const results = [];
 
         if (typeof message === 'function') {
-            const host = this.post.caller;
+            const host = this;
             let result;
             if (asynch !== null) {
                 result = setTimeout(() => {

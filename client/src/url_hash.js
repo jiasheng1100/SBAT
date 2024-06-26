@@ -1,5 +1,7 @@
-var URLHash = (function($, window, undefined) {
-    var URLHash = function(collection, _document, _arguments) {
+import { Util } from "./util.js"
+
+export var URLHash = (function ($, window, undefined) {
+    var URLHash = function (collection, _document, _arguments) {
         var that = this;
         that.collection = collection;
         that.document = _document || '';
@@ -8,13 +10,13 @@ var URLHash = (function($, window, undefined) {
     }
 
     URLHash.prototype = {
-        calcArgs: function() {
+        calcArgs: function () {
             var args = URLHash.splitArgs(this.arguments);
             this.intArguments = args[0];
             this.extArguments = args[1];
         },
 
-        setArgument: function(argument, value) {
+        setArgument: function (argument, value) {
             if (!this.arguments) {
                 this.arguments = {};
             }
@@ -23,7 +25,7 @@ var URLHash = (function($, window, undefined) {
             return this;
         },
 
-        setArguments: function(_arguments) {
+        setArguments: function (_arguments) {
             // the $.extend here basically takes a copy; raw assignment
             // would allow changes of the args to alter original, which
             // could be e.g. the "args" of search results
@@ -32,17 +34,17 @@ var URLHash = (function($, window, undefined) {
             return this;
         },
 
-        setDocument: function(_document) {
+        setDocument: function (_document) {
             this.document = _document;
             return this;
         },
 
-        setCollection: function(collection) {
+        setCollection: function (collection) {
             this.collection = collection;
             return this;
         },
 
-        getHash: function() {
+        getHash: function () {
             var url_hash = this.collection + this.document;
 
             var url_args = Util.param(this.extArguments);
@@ -62,7 +64,7 @@ var URLHash = (function($, window, undefined) {
     // arguments that do not appear in the URL
     var INT_ARGS = ['match', 'matchfocus', 'edited'];
 
-    URLHash.splitArgs = function(args) {
+    URLHash.splitArgs = function (args) {
         var intArgs = {};
         var extArgs = $.extend({}, args);
         var intArgNameLen = INT_ARGS.length;
@@ -74,7 +76,7 @@ var URLHash = (function($, window, undefined) {
     };
 
     // TODO: Document and conform variables to the rest of the object
-    URLHash.parse = function(hash) {
+    URLHash.parse = function (hash) {
         if (hash.length) {
             // Remove the leading hash (#)
             hash = hash.substr(1);
@@ -106,5 +108,4 @@ var URLHash = (function($, window, undefined) {
 
 // BRAT STANDALONE LIBRARY BEGIN
 // Browserify export
-module.exports = URLHash;
 // BRAT STANDALONE LIBRARY END

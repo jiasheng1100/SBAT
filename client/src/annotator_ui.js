@@ -1,5 +1,7 @@
 // -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; -*-
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
+import { URLHash } from "./url_hash.js";
+
 var AnnotatorUI = (function ($, window, undefined) {
     var AnnotatorUI = function (dispatcher, svg) {
         var that = this;
@@ -196,8 +198,8 @@ var AnnotatorUI = (function ($, window, undefined) {
                         arcOptions['right'] = eventDesc.rightSpans.join(',');
                     }
                 }
-                $('#arc_origin').text(Util.spanDisplayForm(spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
-                $('#arc_target').text(Util.spanDisplayForm(spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
+                $('#arc_origin').text(spanDisplayForm(spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
+                $('#arc_target').text(spanDisplayForm(spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
                 var arcId = eventDescId || [originSpanId, type, targetSpanId];
                 fillArcTypesAndDisplayForm(evt, originSpan.type, targetSpan.type, type, arcId);
                 // for precise timing, log dialog display to user.
@@ -244,7 +246,7 @@ var AnnotatorUI = (function ($, window, undefined) {
             });
             arcDragOriginGroup = $(data.spans[arcDragOrigin].group);
             arcDragOriginGroup.addClass('highlight');
-            arcDragOriginBox = Util.realBBox(data.spans[arcDragOrigin].headFragment);
+            arcDragOriginBox = realBBox(data.spans[arcDragOrigin].headFragment);
             arcDragOriginBox.center = arcDragOriginBox.x + arcDragOriginBox.width / 2;
 
             arcDragJustStarted = true;
@@ -736,7 +738,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     var category = ct[0];
                     var attributeTypes = ct[1];
                     $.each(attributeTypes, function (attrNo, attr) {
-                        $input = $('#' + category + '_attr_' + Util.escapeQuotes(attr.type));
+                        $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
                         if (attr.unused) {
                             $input.val('');
                         } else if (attr.bool) {
@@ -763,7 +765,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     console.error('Unrecognized generalType:', span.generalType);
                 }
                 $.each(attributeTypes, function (attrNo, attr) {
-                    $input = $('#' + category + '_attr_' + Util.escapeQuotes(attr.type));
+                    $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
                     var val = span.attributes[attr.type];
                     if (attr.unused) {
                         $input.val(val || '');
@@ -838,7 +840,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                 var validAttrs = type ? spanTypes[type].attributes : [];
                 var shownCount = 0;
                 $.each(attrTypes, function (attrNo, attr) {
-                    var $input = $('#' + category + '_attr_' + Util.escapeQuotes(attr.type));
+                    var $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
                     var showAttr = showAllAttributes || $.inArray(attr.type, validAttrs) != -1;
                     if (showAttr) {
                         $input.button('widget').show();
@@ -924,7 +926,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     attr('id', 'rapid_span_' + (typeNo + 1)).
                     attr('value', type);
                 var spanBgColor = spanTypes[type] && spanTypes[type].bgColor || '#ffffff';
-                spanBgColor = Util.adjustColorLightness(spanBgColor, spanBoxTextBgColorLighten);
+                spanBgColor = adjustColorLightness(spanBgColor, spanBoxTextBgColorLighten);
                 // use preferred label instead of type name if available
                 var name = spanTypes[type] && spanTypes[type].name || type;
                 var $label = $('<label class="span_type_label"/>').
@@ -958,7 +960,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                                 var hotkey = typeHotkey.toLowerCase() == letter
                                     ? typeHotkey.toLowerCase()
                                     : typeHotkey.toUpperCase();
-                                return '<span class="accesskey">' + Util.escapeHTML(hotkey) + '</span>';
+                                return '<span class="accesskey">' + escapeHTML(hotkey) + '</span>';
                             }
                             return all;
                         });
@@ -1073,6 +1075,62 @@ var AnnotatorUI = (function ($, window, undefined) {
         $('#span_norm_db').addClass('ui-widget ui-state-default ui-button-text');
 
         var normSearchDialog = $('#norm_search_dialog');
+
+        var initForm = function (form, opts) {
+            opts = opts || {};
+            var formId = form.attr('id');
+
+            // alsoResize is special
+            var alsoResize = opts.alsoResize;
+            delete opts.alsoResize;
+
+            // Always add OK and Cancel
+            var buttons = (opts.buttons || []);
+            if (opts.no_ok) {
+                delete opts.no_ok;
+            } else {
+                buttons.push({
+                    id: formId + "-ok",
+                    text: "OK",
+                    click: function () { form.submit(); }
+                });
+            }
+            if (opts.no_cancel) {
+                delete opts.no_cancel;
+            } else {
+                buttons.push({
+                    id: formId + "-cancel",
+                    text: "Cancel",
+                    click: function () { form.dialog('close'); }
+                });
+            }
+            delete opts.buttons;
+
+            opts = $.extend({
+                autoOpen: false,
+                closeOnEscape: true,
+                buttons: buttons,
+                modal: true
+            }, opts);
+
+            form.dialog(opts);
+            form.bind('dialogclose', function () {
+                if (form == currentForm) {
+                    currentForm = null;
+                }
+            });
+
+            // HACK: jQuery UI's dialog does not support alsoResize
+            // nor does resizable support a jQuery object of several
+            // elements
+            // See: http://bugs.jqueryui.com/ticket/4666
+            if (alsoResize) {
+                form.parent().resizable('option', 'alsoResize',
+                    '#' + form.attr('id') + ', ' + alsoResize);
+            }
+        };
+
+
         initForm(normSearchDialog, {
             width: 800,
             width: 600,
@@ -1088,32 +1146,7 @@ var AnnotatorUI = (function ($, window, undefined) {
             },
         });
 
-        // BRAT STAND ALONE LIBRARY BEGIN
-        /*
-              $('#norm_search_query').autocomplete({
-                source: function(request, callback) {
-                  var query = $.ui.autocomplete.escapeRegex(request.term);
-                  var pattern = new RegExp('\\b' + query, 'i');
-                  callback($.grep(lastNormSearches, function(search) {
-                    return pattern.test(search.value) || pattern.test(search.id);
-                  }));
-                },
-                minLength: 0,
-                select: function(evt, ui) {
-                  evt.stopPropagation();
-                  normSubmit(ui.item.id, ui.item.value);
-                },
-                focus: function(evt, ui) {
-                  // do nothing
-                },
-              }).data('autocomplete')._renderItem = function($ul, item) {
-                return $('<li></li>').
-                  data('item.autocomplete', item).
-                  append('<a>' + Util.escapeHTML(item.value) + '<div class="autocomplete-id">' + Util.escapeHTML(item.id) + "</div></a>").
-                  appendTo($ul);
-              };
-        */
-        // BRAT STAND ALONE LIBRARY END
+
 
         var normSubmit = function (selectedId, selectedTxt) {
             // we got a value; act if it was a submit
@@ -1188,7 +1221,7 @@ var AnnotatorUI = (function ($, window, undefined) {
 
             var html = ['<tr>'];
             $.each(response.header, function (headNo, head) {
-                html.push('<th>' + Util.escapeHTML(head[0]) + '</th>');
+                html.push('<th>' + escapeHTML(head[0]) + '</th>');
             });
             html.push('</tr>');
             $('#norm_search_result_select thead').html(html.join(''));
@@ -1203,11 +1236,11 @@ var AnnotatorUI = (function ($, window, undefined) {
                 // 11" in cases (try e.g. $x.html('<p a="A&B"/>'). Why? Is
                 // this workaround OK?
                 html.push('<tr' +
-                    ' data-id="' + Util.escapeHTMLandQuotes(item[0]) + '"' +
-                    ' data-txt="' + Util.escapeHTMLandQuotes(item[1]) + '"' +
+                    ' data-id="' + escapeHTMLandQuotes(item[0]) + '"' +
+                    ' data-txt="' + escapeHTMLandQuotes(item[1]) + '"' +
                     '>');
                 for (var i = 0; i < len; i++) {
-                    html.push('<td>' + Util.escapeHTML(item[i]) + '</td>');
+                    html.push('<td>' + escapeHTML(item[i]) + '</td>');
                 }
                 html.push('</tr>');
             });
@@ -1330,7 +1363,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                                         var hotkey = arcDesc.hotkey.toLowerCase() == letter
                                             ? arcDesc.hotkey.toLowerCase()
                                             : arcDesc.hotkey.toUpperCase();
-                                        return '<span class="accesskey">' + Util.escapeHTML(hotkey) + '</span>';
+                                        return '<span class="accesskey">' + escapeHTML(hotkey) + '</span>';
                                     }
                                     return all;
                                 });
@@ -1352,9 +1385,9 @@ var AnnotatorUI = (function ($, window, undefined) {
                     // can't make a new arc
                     dispatcher.post('messages',
                         [[["No choices for " +
-                            Util.spanDisplayForm(spanTypes, originType) +
+                            spanDisplayForm(spanTypes, originType) +
                             " -> " +
-                            Util.spanDisplayForm(spanTypes, targetType),
+                            spanDisplayForm(spanTypes, targetType),
                             'warning']]]);
                     return;
                 }
@@ -1556,8 +1589,8 @@ var AnnotatorUI = (function ($, window, undefined) {
                             collection: coll,
                             'document': doc
                         };
-                        $('#arc_origin').text(Util.spanDisplayForm(spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
-                        $('#arc_target').text(Util.spanDisplayForm(spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
+                        $('#arc_origin').text(spanDisplayForm(spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
+                        $('#arc_target').text(spanDisplayForm(spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
                         fillArcTypesAndDisplayForm(evt, originSpan.type, targetSpan.type);
                         // for precise timing, log dialog display to user.
                         dispatcher.post('logAction', ['arcSelected']);
@@ -1653,7 +1686,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                                 newOffsets.splice(selectedFragment, 1);
                             }
                             newOffsets.push(newOffset);
-                            newOffsets.sort(Util.cmpArrayOnFirstElement);
+                            newOffsets.sort(cmpArrayOnFirstElement);
                             spanOptions.offsets = newOffsets;
                         } else {
                             spanOptions.offsets = [newOffset];
@@ -1793,7 +1826,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     }
                     // use a light version of the span color as BG
                     var spanBgColor = spanTypes[type.type] && spanTypes[type.type].bgColor || '#ffffff';
-                    spanBgColor = Util.adjustColorLightness(spanBgColor, spanBoxTextBgColorLighten);
+                    spanBgColor = adjustColorLightness(spanBgColor, spanBoxTextBgColorLighten);
                     var $label = $('<label class="span_type_label"/>').
                         attr('for', 'span_' + type.type).
                         text(name);
@@ -1830,7 +1863,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                                     var hotkey = type.hotkey.toLowerCase() == letter
                                         ? type.hotkey.toLowerCase()
                                         : type.hotkey.toUpperCase();
-                                    return '<span class="accesskey">' + Util.escapeHTML(hotkey) + '</span>';
+                                    return '<span class="accesskey">' + escapeHTML(hotkey) + '</span>';
                                 }
                                 return all;
                             });
@@ -1848,13 +1881,13 @@ var AnnotatorUI = (function ($, window, undefined) {
         };
         var addAttributeTypesToDiv = function ($top, types, category) {
             $.each(types, function (attrNo, attr) {
-                var escapedType = Util.escapeQuotes(attr.type);
+                var escapedType = escapeQuotes(attr.type);
                 var attrId = category + '_attr_' + escapedType;
                 if (attr.unused) {
                     var $input = $('<input type="hidden" id="' + attrId + '" value=""/>');
                     $top.append($input);
                 } else if (attr.bool) {
-                    var escapedName = Util.escapeQuotes(attr.name);
+                    var escapedName = escapeQuotes(attr.name);
                     var $input = $('<input type="checkbox" id="' + attrId +
                         '" value="' + escapedType +
                         '" category="' + category + '"/>');
@@ -1870,7 +1903,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     var $option = $('<option class="ui-state-default" value=""/>').text(attr.name + ': ?');
                     $select.append($option);
                     $.each(attr.values, function (valType, value) {
-                        $option = $('<option class="ui-state-active" value="' + Util.escapeQuotes(valType) + '"/>').text(attr.name + ': ' + (value.name || valType));
+                        $option = $('<option class="ui-state-active" value="' + escapeQuotes(valType) + '"/>').text(attr.name + ': ' + (value.name || valType));
                         $select.append($option);
                     });
                     $div.append($select);
@@ -1993,7 +2026,7 @@ var AnnotatorUI = (function ($, window, undefined) {
 
         var setupTaggerUI = function (response) {
             var taggers = response.ner_taggers || [];
-            $taggerButtons = $('#tagger_buttons').empty();
+            let $taggerButtons = $('#tagger_buttons').empty();
             $.each(taggers, function (taggerNo, tagger) {
                 // expect a tuple with ID, name, model, and URL
                 var taggerId = tagger[0];
@@ -2004,8 +2037,8 @@ var AnnotatorUI = (function ($, window, undefined) {
                     return true; // continue
                 }
                 var $row = $('<div class="optionRow"/>');
-                var $label = $('<span class="optionLabel">' + Util.escapeHTML(taggerName) + '</span>');
-                var $button = $('<input id="tag_' + Util.escapeHTML(taggerId) + '_button" type="button" value="' + Util.escapeHTML(taggerModel) + '" tabindex="-1" title="Automatically tag the current document."/>');
+                var $label = $('<span class="optionLabel">' + escapeHTML(taggerName) + '</span>');
+                var $button = $('<input id="tag_' + escapeHTML(taggerId) + '_button" type="button" value="' + escapeHTML(taggerModel) + '" tabindex="-1" title="Automatically tag the current document."/>');
                 $row.append($label).append($button);
                 $taggerButtons.append($row);
                 $button.click(function (evt) {
@@ -2047,12 +2080,12 @@ var AnnotatorUI = (function ($, window, undefined) {
             // clear possible existing
             $norm_select.empty();
             // fill in new
-            html = [];
+            let html = [];
             $.each(norm_resources, function (normNo, norm) {
                 var normName = norm[0], normUrl = norm[1], normUrlBase = norm[2];
                 var serverDb = norm[3];
-                html.push('<option value="' + Util.escapeHTML(normName) + '">' +
-                    Util.escapeHTML(normName) + '</option>');
+                html.push('<option value="' + escapeHTML(normName) + '">' +
+                    escapeHTML(normName) + '</option>');
                 // remember the urls for updates
                 normDbUrlByDbName[normName] = normUrl;
                 normDbUrlBaseByDbName[normName] = normUrlBase;
@@ -2165,7 +2198,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                 console.error('Unrecognized type category:', category);
             }
             $.each(attributeTypes, function (attrNo, attr) {
-                var $input = $('#' + category + '_attr_' + Util.escapeQuotes(attr.type));
+                var $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
                 if (attr.bool) {
                     attributes[attr.type] = $input[0].checked;
                 } else if ($input[0].selectedIndex) {
@@ -2192,7 +2225,7 @@ var AnnotatorUI = (function ($, window, undefined) {
         var gotCurrent = function (_coll, _doc, _args) {
             coll = _coll;
             doc = _doc;
-            args = _args;
+            //args = _args;
         };
 
         var undoStack = [];
@@ -2289,15 +2322,15 @@ var AnnotatorUI = (function ($, window, undefined) {
             var $roles = $('#split_roles').empty();
             var numRoles = repeatingArcTypes.length;
             var roles = $.each(repeatingArcTypes, function () {
-                var $role = $('<input id="split_on_' + Util.escapeQuotes(this) +
-                    '" type="checkbox" name="' + Util.escapeQuotes(this) +
-                    '" value="' + Util.escapeQuotes(this) + '"/>');
+                var $role = $('<input id="split_on_' + escapeQuotes(this) +
+                    '" type="checkbox" name="' + escapeQuotes(this) +
+                    '" value="' + escapeQuotes(this) + '"/>');
                 if (numRoles == 1) {
                     // a single role will be selected automatically
                     $role.click();
                 }
-                var $label = $('<label for="split_on_' + Util.escapeQuotes(this) +
-                    '">' + Util.escapeQuotes(this) + '</label>');
+                var $label = $('<label for="split_on_' + escapeQuotes(this) +
+                    '">' + escapeQuotes(this) + '</label>');
                 $roles.append($role).append($label);
             });
             var $roleButtons = $roles.find('input').button();
@@ -2622,31 +2655,379 @@ var AnnotatorUI = (function ($, window, undefined) {
         };
 
         dispatcher.
-            on('init', init).
-            on('getValidArcTypesForDrag', getValidArcTypesForDrag).
-            on('dataReady', rememberData).
-            on('requestRenderData', requestRenderData).
-            on('collectionLoaded', collectionLoaded).
-            on('collectionLoaded', rememberSpanSettings).
-            on('collectionLoaded', setupTaggerUI).
-            on('collectionLoaded', setupNormalizationUI).
-            on('spanAndAttributeTypesLoaded', spanAndAttributeTypesLoaded).
-            on('newSourceData', onNewSourceData).
-            on('hideForm', hideForm).
-            on('user', userReceived).
-            on('edited', edited).
-            on('current', gotCurrent).
-            on('isReloadOkay', isReloadOkay).
-            on('keydown', onKeyDown).
-            on('dblclick', onDblClick).
-            on('dragstart', preventDefault).
-            on('mousedown', onMouseDown).
-            on('mouseup', onMouseUp).
-            on('mousemove', onMouseMove).
-            on('annotationSpeed', setAnnotationSpeed).
-            on('suggestedSpanTypes', receivedSuggestedSpanTypes).
-            on('normGetNameResult', setSpanNormText).
-            on('normSearchResult', setSpanNormSearchResults);
+            on('init', this, init).
+            on('getValidArcTypesForDrag', this, getValidArcTypesForDrag).
+            on('dataReady', this, rememberData).
+            on('requestRenderData', this, requestRenderData).
+            on('collectionLoaded', this, collectionLoaded).
+            on('collectionLoaded', this, rememberSpanSettings).
+            on('collectionLoaded', this, setupTaggerUI).
+            on('collectionLoaded', this, setupNormalizationUI).
+            on('spanAndAttributeTypesLoaded', this, spanAndAttributeTypesLoaded).
+            on('newSourceData', this, onNewSourceData).
+            on('hideForm', this, hideForm).
+            on('user', this, userReceived).
+            on('edited', this, edited).
+            on('current', this, gotCurrent).
+            on('isReloadOkay', this, isReloadOkay).
+            on('keydown', this, onKeyDown).
+            on('dblclick', this, onDblClick).
+            on('dragstart', this, preventDefault).
+            on('mousedown', this, onMouseDown).
+            on('mouseup', this, onMouseUp).
+            on('mousemove', this, onMouseMove).
+            on('annotationSpeed', this, setAnnotationSpeed).
+            on('suggestedSpanTypes', this, receivedSuggestedSpanTypes).
+            on('normGetNameResult', this, setSpanNormText).
+            on('normSearchResult', this, setSpanNormSearchResults);
+    };
+
+    const cmpArrayOnFirstElement = function (a, b) {
+        a = a[0];
+        b = b[0];
+        return a < b ? -1 : a > b ? 1 : 0;
+    }
+
+    const realBBox = function (span) {
+        const box = span.rect.getBBox();
+        const chunkTranslation = span.chunk.translation;
+        const rowTranslation = span.chunk.row.translation;
+        box.x += chunkTranslation.x + rowTranslation.x;
+        box.y += chunkTranslation.y + rowTranslation.y;
+        return box;
+    }
+
+    const escapeHTML = function (str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    const escapeHTMLandQuotes = function (str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
+    }
+
+    const escapeQuotes = function (str) {
+        // we only use double quotes for HTML attributes
+        return str.replace(/\"/g, '&quot;');
+    }
+
+    const getSpanLabels = function (spanTypes, spanType) {
+        var type = spanTypes[spanType];
+        return type && type.labels || [];
+    }
+
+    const spanDisplayForm = function (spanTypes, spanType) {
+        var labels = getSpanLabels(spanTypes, spanType);
+        return labels[0] || spanType;
+    }
+
+    // color name RGB list, converted from
+    // http://www.w3schools.com/html/html_colornames.asp
+    // with perl as
+    //     perl -e 'print "var colors = {\n"; while(<>) { /(\S+)\s+\#([0-9a-z]{2})([0-9a-z]{2})([0-9a-z]{2})\s*/i or die "Failed to parse $_"; ($r,$g,$b)=(hex($2),hex($3),hex($4)); print "    '\''",lc($1),"'\'':\[$r,$g,$b\],\n" } print "};\n" '
+    const colors = {
+        'aliceblue': [240, 248, 255],
+        'antiquewhite': [250, 235, 215],
+        'aqua': [0, 255, 255],
+        'aquamarine': [127, 255, 212],
+        'azure': [240, 255, 255],
+        'beige': [245, 245, 220],
+        'bisque': [255, 228, 196],
+        'black': [0, 0, 0],
+        'blanchedalmond': [255, 235, 205],
+        'blue': [0, 0, 255],
+        'blueviolet': [138, 43, 226],
+        'brown': [165, 42, 42],
+        'burlywood': [222, 184, 135],
+        'cadetblue': [95, 158, 160],
+        'chartreuse': [127, 255, 0],
+        'chocolate': [210, 105, 30],
+        'coral': [255, 127, 80],
+        'cornflowerblue': [100, 149, 237],
+        'cornsilk': [255, 248, 220],
+        'crimson': [220, 20, 60],
+        'cyan': [0, 255, 255],
+        'darkblue': [0, 0, 139],
+        'darkcyan': [0, 139, 139],
+        'darkgoldenrod': [184, 134, 11],
+        'darkgray': [169, 169, 169],
+        'darkgrey': [169, 169, 169],
+        'darkgreen': [0, 100, 0],
+        'darkkhaki': [189, 183, 107],
+        'darkmagenta': [139, 0, 139],
+        'darkolivegreen': [85, 107, 47],
+        'darkorange': [255, 140, 0],
+        'darkorchid': [153, 50, 204],
+        'darkred': [139, 0, 0],
+        'darksalmon': [233, 150, 122],
+        'darkseagreen': [143, 188, 143],
+        'darkslateblue': [72, 61, 139],
+        'darkslategray': [47, 79, 79],
+        'darkslategrey': [47, 79, 79],
+        'darkturquoise': [0, 206, 209],
+        'darkviolet': [148, 0, 211],
+        'deeppink': [255, 20, 147],
+        'deepskyblue': [0, 191, 255],
+        'dimgray': [105, 105, 105],
+        'dimgrey': [105, 105, 105],
+        'dodgerblue': [30, 144, 255],
+        'firebrick': [178, 34, 34],
+        'floralwhite': [255, 250, 240],
+        'forestgreen': [34, 139, 34],
+        'fuchsia': [255, 0, 255],
+        'gainsboro': [220, 220, 220],
+        'ghostwhite': [248, 248, 255],
+        'gold': [255, 215, 0],
+        'goldenrod': [218, 165, 32],
+        'gray': [128, 128, 128],
+        'grey': [128, 128, 128],
+        'green': [0, 128, 0],
+        'greenyellow': [173, 255, 47],
+        'honeydew': [240, 255, 240],
+        'hotpink': [255, 105, 180],
+        'indianred': [205, 92, 92],
+        'indigo': [75, 0, 130],
+        'ivory': [255, 255, 240],
+        'khaki': [240, 230, 140],
+        'lavender': [230, 230, 250],
+        'lavenderblush': [255, 240, 245],
+        'lawngreen': [124, 252, 0],
+        'lemonchiffon': [255, 250, 205],
+        'lightblue': [173, 216, 230],
+        'lightcoral': [240, 128, 128],
+        'lightcyan': [224, 255, 255],
+        'lightgoldenrodyellow': [250, 250, 210],
+        'lightgray': [211, 211, 211],
+        'lightgrey': [211, 211, 211],
+        'lightgreen': [144, 238, 144],
+        'lightpink': [255, 182, 193],
+        'lightsalmon': [255, 160, 122],
+        'lightseagreen': [32, 178, 170],
+        'lightskyblue': [135, 206, 250],
+        'lightslategray': [119, 136, 153],
+        'lightslategrey': [119, 136, 153],
+        'lightsteelblue': [176, 196, 222],
+        'lightyellow': [255, 255, 224],
+        'lime': [0, 255, 0],
+        'limegreen': [50, 205, 50],
+        'linen': [250, 240, 230],
+        'magenta': [255, 0, 255],
+        'maroon': [128, 0, 0],
+        'mediumaquamarine': [102, 205, 170],
+        'mediumblue': [0, 0, 205],
+        'mediumorchid': [186, 85, 211],
+        'mediumpurple': [147, 112, 216],
+        'mediumseagreen': [60, 179, 113],
+        'mediumslateblue': [123, 104, 238],
+        'mediumspringgreen': [0, 250, 154],
+        'mediumturquoise': [72, 209, 204],
+        'mediumvioletred': [199, 21, 133],
+        'midnightblue': [25, 25, 112],
+        'mintcream': [245, 255, 250],
+        'mistyrose': [255, 228, 225],
+        'moccasin': [255, 228, 181],
+        'navajowhite': [255, 222, 173],
+        'navy': [0, 0, 128],
+        'oldlace': [253, 245, 230],
+        'olive': [128, 128, 0],
+        'olivedrab': [107, 142, 35],
+        'orange': [255, 165, 0],
+        'orangered': [255, 69, 0],
+        'orchid': [218, 112, 214],
+        'palegoldenrod': [238, 232, 170],
+        'palegreen': [152, 251, 152],
+        'paleturquoise': [175, 238, 238],
+        'palevioletred': [216, 112, 147],
+        'papayawhip': [255, 239, 213],
+        'peachpuff': [255, 218, 185],
+        'peru': [205, 133, 63],
+        'pink': [255, 192, 203],
+        'plum': [221, 160, 221],
+        'powderblue': [176, 224, 230],
+        'purple': [128, 0, 128],
+        'red': [255, 0, 0],
+        'rosybrown': [188, 143, 143],
+        'royalblue': [65, 105, 225],
+        'saddlebrown': [139, 69, 19],
+        'salmon': [250, 128, 114],
+        'sandybrown': [244, 164, 96],
+        'seagreen': [46, 139, 87],
+        'seashell': [255, 245, 238],
+        'sienna': [160, 82, 45],
+        'silver': [192, 192, 192],
+        'skyblue': [135, 206, 235],
+        'slateblue': [106, 90, 205],
+        'slategray': [112, 128, 144],
+        'slategrey': [112, 128, 144],
+        'snow': [255, 250, 250],
+        'springgreen': [0, 255, 127],
+        'steelblue': [70, 130, 180],
+        'tan': [210, 180, 140],
+        'teal': [0, 128, 128],
+        'thistle': [216, 191, 216],
+        'tomato': [255, 99, 71],
+        'turquoise': [64, 224, 208],
+        'violet': [238, 130, 238],
+        'wheat': [245, 222, 179],
+        'white': [255, 255, 255],
+        'whitesmoke': [245, 245, 245],
+        'yellow': [255, 255, 0],
+        'yellowgreen': [154, 205, 50],
+    };
+
+    // color parsing function originally from
+    // http://plugins.jquery.com/files/jquery.color.js.txt
+    // (with slight modifications)
+
+    // Parse strings looking for color tuples [255,255,255]
+    const rgbNumRE = /rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/;
+    const rgbPercRE = /rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/;
+    const rgbHash6RE = /#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/;
+    const rgbHash3RE = /#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/;
+
+    const strToRgb = function (color) {
+        let result;
+
+        // Check if we're already dealing with an array of colors
+        //         if ( color && color.constructor == Array && color.length == 3 )
+        //             return color;
+
+        // Look for rgb(num,num,num)
+        if (result = rgbNumRE.exec(color))
+            return [parseInt(result[1]), parseInt(result[2]), parseInt(result[3])];
+
+        // Look for rgb(num%,num%,num%)
+        if (result = rgbPercRE.exec(color))
+            return [parseFloat(result[1]) * 2.55, parseFloat(result[2]) * 2.55, parseFloat(result[3]) * 2.55];
+
+        // Look for #a0b1c2
+        if (result = rgbHash6RE.exec(color))
+            return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
+
+        // Look for #fff
+        if (result = rgbHash3RE.exec(color))
+            return [parseInt(result[1] + result[1], 16), parseInt(result[2] + result[2], 16), parseInt(result[3] + result[3], 16)];
+
+        // Otherwise, we're most likely dealing with a named color
+        return colors[$.trim(color).toLowerCase()];
+    }
+
+    const rgbToStr = function (rgb) {
+        // TODO: there has to be a better way, even in JS
+        var r = Math.floor(rgb[0]).toString(16);
+        var g = Math.floor(rgb[1]).toString(16);
+        var b = Math.floor(rgb[2]).toString(16);
+        // pad
+        r = r.length < 2 ? '0' + r : r;
+        g = g.length < 2 ? '0' + g : g;
+        b = b.length < 2 ? '0' + b : b;
+        return ('#' + r + g + b);
+    }
+
+    // Functions rgbToHsl and hslToRgb originally from 
+    // http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+    // implementation of functions in Wikipedia
+    // (with slight modifications)
+
+    // RGB to HSL color conversion
+    const rgbToHsl = function (rgb) {
+        const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max == min) {
+            h = s = 0; // achromatic
+        } else {
+            var d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return [h, s, l];
+    }
+
+    const hue2rgb = function (p, q, t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+    }
+
+    const hslToRgb = function (hsl) {
+        const h = hsl[0], s = hsl[1], l = hsl[2];
+
+        let r, g, b;
+
+        if (s == 0) {
+            r = g = b = l; // achromatic
+        } else {
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1 / 3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1 / 3);
+        }
+
+        return [r * 255, g * 255, b * 255];
+    }
+
+    const adjustLightnessCache = {};
+
+    // given color string and -1<=adjust<=1, returns color string
+    // where lightness (in the HSL sense) is adjusted by the given
+    // amount, the larger the lighter: -1 gives black, 1 white, and 0
+    // the given color.
+    const adjustColorLightness = function (colorstr, adjust) {
+        if (!(colorstr in adjustLightnessCache)) {
+            adjustLightnessCache[colorstr] = {}
+        }
+        if (!(adjust in adjustLightnessCache[colorstr])) {
+            const rgb = strToRgb(colorstr);
+            if (rgb === undefined) {
+                // failed color string conversion; just return the input
+                adjustLightnessCache[colorstr][adjust] = colorstr;
+            } else {
+                const hsl = rgbToHsl(rgb);
+                if (adjust > 0.0) {
+                    hsl[2] = 1.0 - ((1.0 - hsl[2]) * (1.0 - adjust));
+                } else {
+                    hsl[2] = (1.0 + adjust) * hsl[2];
+                }
+                const lightRgb = hslToRgb(hsl);
+                adjustLightnessCache[colorstr][adjust] = rgbToStr(lightRgb);
+            }
+        }
+        return adjustLightnessCache[colorstr][adjust];
+    }
+
+    // Partially stolen from: http://documentcloud.github.com/underscore/
+    // MIT-License
+    // TODO: Mention in LICENSE.md
+    const isEqual = function (a, b) {
+        // Check object identity.
+        if (a === b) return true;
+        // Different types?
+        const atype = typeof (a), btype = typeof (b);
+        if (atype != btype) return false;
+        // Basic equality test (watch out for coercions).
+        if (a == b) return true;
+        // One is falsy and the other truthy.
+        if ((!a && b) || (a && !b)) return false;
+        // If a is not an object by this point, we can't handle it.
+        if (atype !== 'object') return false;
+        // Check for different array lengths before comparing contents.
+        if (a.length && (a.length !== b.length)) return false;
+        // Nothing else worked, deep compare the contents.
+        for (let key in b) if (!(key in a)) return false;
+        // Recursive comparison of contents.
+        for (let key in a) if (!(key in b) || !isEqual(a[key], b[key])) return false;
+        return true;
     };
 
     return AnnotatorUI;

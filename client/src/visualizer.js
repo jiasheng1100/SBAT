@@ -1,6 +1,10 @@
 // -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; -*-
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 
+import Dispatcher from "./dispatcher.js"
+import { Util } from "./util.js"
+import { URLHash } from "./url_hash.js";
+
 var Visualizer = (function ($, window, undefined) {
     var fontLoadTimeout = 5000; // 5 seconds
 
@@ -831,7 +835,7 @@ var Visualizer = (function ($, window, undefined) {
             }); // eventDescs
 
             // highlighting
-            markedText = [];
+            let markedText = [];
             setMarked('edited'); // set by editing process
             setMarked('focus'); // set by URL
             setMarked('matchfocus'); // set by search process, focused match
@@ -841,7 +845,7 @@ var Visualizer = (function ($, window, undefined) {
                 // calculate average arc distances
                 // average distance of arcs (0 for no arcs)
                 span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0;
-                lastSpan = span;
+                let lastSpan = span;
 
                 // collect fragment texts into span texts
                 var fragmentTexts = [];
@@ -1305,7 +1309,7 @@ var Visualizer = (function ($, window, undefined) {
             if (!data || data.length == 0) return;
 
             // establish the width according to the enclosing element
-            canvasWidth = that.forceWidth || $svgDiv.width();
+            let canvasWidth = that.forceWidth || $svgDiv.width();
 
             var defs = addHeaderAndDefs();
 
@@ -2344,6 +2348,8 @@ var Visualizer = (function ($, window, undefined) {
                     for (var rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
                         var row = rows[rowIndex];
                         row.hasAnnotations = true;
+                        let from;
+                        let to;
 
                         if (rowIndex == leftRow) {
                             from = leftBox.x + leftBox.width;

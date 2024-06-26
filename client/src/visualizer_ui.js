@@ -1,3 +1,6 @@
+//import Util from "./client/src/util.js"
+import { URLHash } from "./url_hash.js";
+
 // -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; -*-
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 var VisualizerUI = (function ($, window, undefined) {
@@ -268,9 +271,9 @@ var VisualizerUI = (function ($, window, undefined) {
                 if (commentType == 'AnnotatorNotes') {
                     commentLabel = '<b>Note:</b> ';
                 } else {
-                    commentLabel = '<b>' + Util.escapeHTML(commentType) + ':</b> ';
+                    commentLabel = '<b>' + escapeHTML(commentType) + ':</b> ';
                 }
-                comment += commentLabel + Util.escapeHTMLwithNewlines(commentText);
+                comment += commentLabel + escapeHTMLwithNewlines(commentText);
                 idtype = 'comment_' + commentType;
             }
             commentPopup[0].className = idtype;
@@ -295,7 +298,7 @@ var VisualizerUI = (function ($, window, undefined) {
             if (a[0].toLowerCase() == '<img>') return -1;
             if (b[0].toLowerCase() == '<img>') return 1;
             // otherwise stable
-            return Util.cmp(a[2], b[2]);
+            return cmp(a[2], b[2]);
         }
 
         var displaySpanComment = function (
@@ -305,20 +308,20 @@ var VisualizerUI = (function ($, window, undefined) {
             var immediately = false;
             var comment = ('<div><span class="comment_type_id_wrapper">' +
                 '<span class="comment_type">' +
-                Util.escapeHTML(Util.spanDisplayForm(spanTypes,
+                escapeHTML(spanDisplayForm(spanTypes,
                     spanType)) +
                 '</span>' +
                 ' ' +
                 '<span class="comment_id">' +
-                'ID:' + Util.escapeHTML(spanId) +
+                'ID:' + escapeHTML(spanId) +
                 '</span></span>');
             if (mods.length) {
-                comment += '<div>' + Util.escapeHTML(mods.join(', ')) + '</div>';
+                comment += '<div>' + escapeHTML(mods.join(', ')) + '</div>';
             }
 
             comment += '</div>';
             comment += ('<div class="comment_text">"' +
-                Util.escapeHTML(spanText) +
+                escapeHTML(spanText) +
                 '"</div>');
             var validArcTypesForDrag = dispatcher.post('getValidArcTypesForDrag', [spanId, spanType]);
             if (validArcTypesForDrag && validArcTypesForDrag[0]) {
@@ -335,8 +338,8 @@ var VisualizerUI = (function ($, window, undefined) {
                 var dbName = norm[0], dbKey = norm[1];
                 comment += ('<hr/>' +
                     '<span class="comment_id">' +
-                    Util.escapeHTML(dbName) + ':' +
-                    Util.escapeHTML(dbKey) + '</span>');
+                    escapeHTML(dbName) + ':' +
+                    escapeHTML(dbKey) + '</span>');
                 if (dbName in normServerDbByNormDbName &&
                     normServerDbByNormDbName[dbName] != '<NONE>') {
                     // DB available, add drop-off point to HTML and store
@@ -350,7 +353,7 @@ var VisualizerUI = (function ($, window, undefined) {
                     // with the annotation, if any
                     if (norm[2]) {
                         comment += ('<br/><span class="norm_info_value">' +
-                            Util.escapeHTML(norm[2]) + '</span>');
+                            escapeHTML(norm[2]) + '</span>');
                     }
                 }
             });
@@ -411,10 +414,10 @@ var VisualizerUI = (function ($, window, undefined) {
                                     }
 
                                     norminfo += ('<span class="norm_info_label">' +
-                                        Util.escapeHTML(label) +
+                                        escapeHTML(label) +
                                         '</span>' +
                                         '<span class="norm_info_value">' + ':' +
-                                        Util.escapeHTML(value) +
+                                        escapeHTML(value) +
                                         '</span>' +
                                         '<br/>');
                                 }
@@ -444,32 +447,32 @@ var VisualizerUI = (function ($, window, undefined) {
             var arcRole = target.attr('data-arc-role');
             // in arrowStr, &#8212 == mdash, &#8594 == Unicode right arrow
             var arrowStr = symmetric ? '&#8212;' : '&#8594;';
-            var arcDisplayForm = Util.arcDisplayForm(spanTypes,
+            var arcDisplayForm = arcDisplayForm(spanTypes,
                 data.spans[originSpanId].type,
                 arcRole,
                 relationTypesHash);
             var comment = "";
             comment += ('<span class="comment_type_id_wrapper">' +
                 '<span class="comment_type">' +
-                Util.escapeHTML(Util.spanDisplayForm(spanTypes,
+                escapeHTML(spanDisplayForm(spanTypes,
                     originSpanType)) +
                 ' ' + arrowStr + ' ' +
-                Util.escapeHTML(arcDisplayForm) +
+                escapeHTML(arcDisplayForm) +
                 ' ' + arrowStr + ' ' +
-                Util.escapeHTML(Util.spanDisplayForm(spanTypes,
+                escapeHTML(spanDisplayForm(spanTypes,
                     targetSpanType)) +
                 '</span>' +
                 '<span class="comment_id">' +
                 (arcId ? 'ID:' + arcId :
-                    Util.escapeHTML(originSpanId) +
+                    escapeHTML(originSpanId) +
                     arrowStr +
-                    Util.escapeHTML(targetSpanId)) +
+                    escapeHTML(targetSpanId)) +
                 '</span>' +
                 '</span>');
             comment += ('<div class="comment_text">' +
-                Util.escapeHTML('"' + data.spans[originSpanId].text + '"') +
+                escapeHTML('"' + data.spans[originSpanId].text + '"') +
                 arrowStr +
-                Util.escapeHTML('"' + data.spans[targetSpanId].text + '"') +
+                escapeHTML('"' + data.spans[targetSpanId].text + '"') +
                 '</div>');
             displayComment(evt, target, comment, commentText, commentType);
         };
@@ -581,7 +584,7 @@ var VisualizerUI = (function ($, window, undefined) {
             if (docname) {
                 sel += '[data-doc="' + docname + '"]';
                 if (mf) {
-                    sel += '[data-mf="' + Util.paramArray(mf) + '"]';
+                    sel += '[data-mf="' + paramArray(mf) + '"]';
                 }
                 var $element = table.find(sel).first();
                 $element.addClass('selected');
@@ -680,7 +683,7 @@ var VisualizerUI = (function ($, window, undefined) {
             fileBrowser.find('#document_select tbody').empty();
 
             if (coll != _coll || doc != _doc ||
-                Util.paramArray(args.matchfocus) != matchFocus) {
+                paramArray(args.matchfocus) != matchFocus) {
                 // something changed
 
                 // set to allow keeping "blind" down during reload
@@ -698,7 +701,7 @@ var VisualizerUI = (function ($, window, undefined) {
                 var newArgs = [];
                 if (matchFocus) newArgs.push('matchfocus=' + matchFocus);
                 if (matches) newArgs.push('match=' + matches);
-                dispatcher.post('setCollection', [_coll, _doc, Util.deparam(newArgs.join('&'))]);
+                dispatcher.post('setCollection', [_coll, _doc, deparam(newArgs.join('&'))]);
             } else {
                 // hide even on select current thing
                 hideForm();
@@ -730,7 +733,7 @@ var VisualizerUI = (function ($, window, undefined) {
                     // check whether 'focus' agrees; the rest of the args are
                     // irrelevant for determining position.
                     var collectionArgs = docRow[1] || {};
-                    if (Util.isEqual(collectionArgs.matchfocus, args.matchfocus)) {
+                    if (isEqual(collectionArgs.matchfocus, args.matchfocus)) {
                         pos = docNo;
                         return false;
                     }
@@ -754,7 +757,7 @@ var VisualizerUI = (function ($, window, undefined) {
                 if (type !== null) {
                     if (!included[type.name]) {
                         included[type.name] = true;
-                        var $option = $('<option value="' + Util.escapeQuotes(type.type) + '"/>').text(type.name);
+                        var $option = $('<option value="' + escapeQuotes(type.type) + '"/>').text(type.name);
                         $select.append($option);
                         if (type.children) {
                             addSpanTypesToSelect($select, type.children, included);
@@ -806,7 +809,7 @@ var VisualizerUI = (function ($, window, undefined) {
             $.each(targets, function (targetNo, target) {
                 var spanType = spanTypes[target];
                 var spanName = spanType.name || spanType.labels[0] || target;
-                var option = '<option value="' + Util.escapeQuotes(target) + '">' + Util.escapeHTML(spanName) + '</option>'
+                var option = '<option value="' + escapeQuotes(target) + '">' + escapeHTML(spanName) + '</option>'
                 $type.append(option);
             });
             // return the type to the same value, if possible
@@ -824,7 +827,7 @@ var VisualizerUI = (function ($, window, undefined) {
             var $role = $('<select class="fullwidth"/>');
             $role.append('<option value="">- Any -</option>');
             $.each(searchEventRoles, function (arcTypePairNo, arcTypePair) {
-                var option = '<option value="' + Util.escapeQuotes(arcTypePair[0]) + '">' + Util.escapeHTML(arcTypePair[1]) + '</option>'
+                var option = '<option value="' + escapeQuotes(arcTypePair[0]) + '">' + escapeHTML(arcTypePair[1]) + '</option>'
                 $role.append(option);
             });
             var $type = $('<select class="fullwidth"/>');
@@ -888,7 +891,7 @@ var VisualizerUI = (function ($, window, undefined) {
                         $.each(spanType.arcs, function (arcTypeNo, arcType) {
                             if (arcType.type === relTypeType) {
                                 var spanName = spanType.name;
-                                var option = '<option value="' + Util.escapeQuotes(spanTypeType) + '">' + Util.escapeHTML(spanName) + '</option>'
+                                var option = '<option value="' + escapeQuotes(spanTypeType) + '">' + escapeHTML(spanName) + '</option>'
                                 $arg1.append(option);
                             }
                         });
@@ -916,8 +919,8 @@ var VisualizerUI = (function ($, window, undefined) {
             });
             if (arcType && arcType.targets) {
                 $.each(arcType.targets, function (spanTypeNo, spanTypeType) {
-                    var spanName = Util.spanDisplayForm(spanTypes, spanTypeType);
-                    var option = '<option value="' + Util.escapeQuotes(spanTypeType) + '">' + Util.escapeHTML(spanName) + '</option>'
+                    var spanName = spanDisplayForm(spanTypes, spanTypeType);
+                    var option = '<option value="' + escapeQuotes(spanTypeType) + '">' + escapeHTML(spanName) + '</option>'
                     $arg2.append(option);
                 });
             }
@@ -1532,7 +1535,7 @@ var VisualizerUI = (function ($, window, undefined) {
             if (mtime) {
                 // we're getting seconds and need milliseconds
                 //$('#document_ctime').text("Created: " + Annotator.formatTime(1000 * sourceData.ctime)).css("display", "inline");
-                $('#document_mtime').text("Last modified: " + Util.formatTimeAgo(1000 * mtime)).show();
+                $('#document_mtime').text("Last modified: " + formatTimeAgo(1000 * mtime)).show();
             } else {
                 //$('#document_ctime').css("display", "none");
                 $('#document_mtime').hide();
@@ -1566,7 +1569,7 @@ var VisualizerUI = (function ($, window, undefined) {
                 $sourceCollection.append($collectionDownloadLink);
                 $collectionDownloadLink.button();
 
-                $cmpButton = $('#side-by-side_cmp').empty();
+                let $cmpButton = $('#side-by-side_cmp').empty();
                 var $cmpLink = $('<a target="_blank"/>')
                     .text('Comparison mode')
                     .attr('href', 'diff.xhtml?diff=' + encodeURIComponent(coll));
@@ -2100,6 +2103,144 @@ var VisualizerUI = (function ($, window, undefined) {
             on('screamingHalt', this, onScreamingHalt).
             //on('configurationUpdated', updateConfigurationUI).
             on('configurationChanged', this, configurationChanged);
+    };
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const cmp = function (a, b) {
+        return a < b ? -1 : a > b ? 1 : 0;
+    }
+
+    const unitAgo = function (n, unit) {
+        if (n == 1) return "" + n + " " + unit + " ago";
+        return "" + n + " " + unit + "s ago";
+    };
+
+    const formatTimeAgo = function (time) {
+        if (time == -1000) {
+            return "never"; // FIXME make the server return the server time!
+        }
+
+        const nowDate = new Date();
+        const now = nowDate.getTime();
+        const diff = Math.floor((now - time) / 1000);
+        if (!diff) return "just now";
+        if (diff < 60) return unitAgo(diff, "second");
+        diff = Math.floor(diff / 60);
+        if (diff < 60) return unitAgo(diff, "minute");
+        diff = Math.floor(diff / 60);
+        if (diff < 24) return unitAgo(diff, "hour");
+        diff = Math.floor(diff / 24);
+        if (diff < 7) return unitAgo(diff, "day");
+        if (diff < 28) return unitAgo(Math.floor(diff / 7), "week");
+        const thenDate = new Date(time);
+        const result = thenDate.getDate() + ' ' + monthNames[thenDate.getMonth()];
+        if (thenDate.getYear() != nowDate.getYear()) {
+            result += ' ' + thenDate.getFullYear();
+        }
+        return result;
+    }
+
+    const escapeHTML = function (str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+
+    const escapeHTMLwithNewlines = function (str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>');
+    }
+
+    const escapeQuotes = function (str) {
+        // we only use double quotes for HTML attributes
+        return str.replace(/\"/g, '&quot;');
+    }
+
+    const getSpanLabels = function (spanTypes, spanType) {
+        var type = spanTypes[spanType];
+        return type && type.labels || [];
+    }
+
+    const spanDisplayForm = function (spanTypes, spanType) {
+        var labels = getSpanLabels(spanTypes, spanType);
+        return labels[0] || spanType;
+    }
+
+    // Partially stolen from: http://documentcloud.github.com/underscore/
+    // MIT-License
+    // TODO: Mention in LICENSE.md
+    const isEqual = function (a, b) {
+        // Check object identity.
+        if (a === b) return true;
+        // Different types?
+        const atype = typeof (a), btype = typeof (b);
+        if (atype != btype) return false;
+        // Basic equality test (watch out for coercions).
+        if (a == b) return true;
+        // One is falsy and the other truthy.
+        if ((!a && b) || (a && !b)) return false;
+        // If a is not an object by this point, we can't handle it.
+        if (atype !== 'object') return false;
+        // Check for different array lengths before comparing contents.
+        if (a.length && (a.length !== b.length)) return false;
+        // Nothing else worked, deep compare the contents.
+        for (let key in b) if (!(key in a)) return false;
+        // Recursive comparison of contents.
+        for (let key in a) if (!(key in b) || !isEqual(a[key], b[key])) return false;
+        return true;
+    };
+
+    const keyValRE = /^([^=]+)=(.*)$/; // key=value
+    const isDigitsRE = /^[0-9]+$/;
+
+    const deparam = function (str) {
+        const args = str.split('&');
+        const len = args.length;
+        if (!len) return null;
+        const result = {};
+        for (let i = 0; i < len; i++) {
+            const parts = args[i].match(keyValRE);
+            if (!parts || parts.length != 3) break;
+            const val = [];
+            const arr = parts[2].split(',');
+            const sublen = arr.length;
+            for (let j = 0; j < sublen; j++) {
+                const innermost = [];
+                // map empty arguments ("" in URL) to empty arrays
+                // (innermost remains [])
+                if (arr[j].length) {
+                    const arrsplit = arr[j].split('~');
+                    const subsublen = arrsplit.length;
+                    for (let k = 0; k < subsublen; k++) {
+                        if (arrsplit[k].match(isDigitsRE)) {
+                            // convert digits into ints ...
+                            innermost.push(parseInt(arrsplit[k], 10));
+                        }
+                        else {
+                            // ... anything else remains a string.
+                            innermost.push(arrsplit[k]);
+                        }
+                    }
+                }
+                val.push(innermost);
+            }
+            result[parts[1]] = val;
+        }
+        return result;
+    };
+
+    const paramArray = function (val) {
+        val = val || [];
+        const len = val.length;
+        const arr = [];
+        for (let i = 0; i < len; i++) {
+            if ($.isArray(val[i])) {
+                arr.push(val[i].join('~'));
+            } else {
+                // non-array argument; this is an error from the caller
+                console.error('param: Error: received non-array-in-array argument [', i, ']', ':', val[i], '(fix caller)');
+            }
+        }
+        return arr;
     };
 
     return VisualizerUI;

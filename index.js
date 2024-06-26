@@ -414,7 +414,7 @@ if (typeof window !== 'undefined') {
         let brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData, options);
         //brat.init()
         console.log(brat)
-        brat.dispatcher.on('sglclick', function (data) {
+        brat.dispatcher.on('sglclick', this, function (data) {
             console.log(data);
         });
     });

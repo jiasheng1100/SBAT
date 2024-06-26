@@ -7,9 +7,12 @@ import LocalAjax from "./client/src/local_ajax.js"
 import Visualizer from "./client/src/visualizer.js"
 import VisualizerUI from "./client/src/visualizer_ui.js"
 import AnnotatorUI from "./client/src/annotator_ui.js"
+//import { Util } from "./client/src/util.js"
 
 let dispatcher = new Dispatcher();
 console.log(dispatcher)
+//let util = Util
+//console.log(util)
 
 
 export class BratFrontendEditor {
