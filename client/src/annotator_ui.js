@@ -193,15 +193,20 @@ var AnnotatorUI = (function ($, window, undefined) {
                 var eventDescId = target.attr('data-arc-ed');
                 if (eventDescId) {
                     var eventDesc = data.eventDescs[eventDescId];
-                    if (eventDesc.equiv) {
-                        arcOptions['left'] = eventDesc.leftSpans.join(',');
-                        arcOptions['right'] = eventDesc.rightSpans.join(',');
+                    if (eventDesc !== undefined) {
+                        if (eventDesc.equiv) {
+                            arcOptions['left'] = eventDesc.leftSpans.join(',');
+                            arcOptions['right'] = eventDesc.rightSpans.join(',');
+                        }
                     }
                 }
-                $('#arc_origin').text(spanDisplayForm(spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
-                $('#arc_target').text(spanDisplayForm(spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
-                var arcId = eventDescId || [originSpanId, type, targetSpanId];
-                fillArcTypesAndDisplayForm(evt, originSpan.type, targetSpan.type, type, arcId);
+                if (originSpan !== undefined) {
+                    $('#arc_origin').text(spanDisplayForm(spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
+                    $('#arc_target').text(spanDisplayForm(spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
+
+                    var arcId = eventDescId || [originSpanId, type, targetSpanId];
+                    fillArcTypesAndDisplayForm(evt, originSpan.type, targetSpan.type, type, arcId);
+                }
                 // for precise timing, log dialog display to user.
                 dispatcher.post('logAction', ['arcEditSelected']);
 
@@ -237,17 +242,20 @@ var AnnotatorUI = (function ($, window, undefined) {
         var startArcDrag = function (originId) {
             clearSelection();
             svgElement.addClass('unselectable');
-            svgPosition = svgElement.offset();
+            var svgPosition = svgElement.offset();
             arcDragOrigin = originId;
             arcDragArc = svg.path(svg.createPath(), {
                 markerEnd: 'url(#drag_arrow)',
                 'class': 'drag_stroke',
                 fill: 'none',
             });
+            console.log($(data.spans))
+            /*
             arcDragOriginGroup = $(data.spans[arcDragOrigin].group);
             arcDragOriginGroup.addClass('highlight');
             arcDragOriginBox = realBBox(data.spans[arcDragOrigin].headFragment);
             arcDragOriginBox.center = arcDragOriginBox.x + arcDragOriginBox.width / 2;
+            */
 
             arcDragJustStarted = true;
         };
@@ -1535,14 +1543,17 @@ var AnnotatorUI = (function ($, window, undefined) {
                     target = $('.badTarget');
                 }
                 target.removeClass('badTarget');
-                arcDragOriginGroup.removeClass('highlight');
+                if (arcDragOriginGroup !== null) {
+                    arcDragOriginGroup.removeClass('highlight');
+                }
                 if (target) {
                     target.parent().removeClass('highlight');
                 }
+                /*
                 if (arcDragArc) {
                     svg.remove(arcDragArc);
                     arcDrag = null;
-                }
+                }*/
                 arcDragOrigin = null;
                 if (arcOptions) {
                     $('g[data-from="' + arcOptions.origin + '"][data-to="' + arcOptions.target + '"]').removeClass('reselect');
@@ -1575,6 +1586,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                 var origin = arcDragOrigin;
                 var targetValid = target.hasClass('reselectTarget');
                 stopArcDrag(target);
+                let id;
                 if ((id = target.attr('data-span-id')) && origin != id && targetValid) {
                     var originSpan = data.spans[origin];
                     var targetSpan = data.spans[id];

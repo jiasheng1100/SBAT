@@ -309,11 +309,12 @@ var Visualizer = (function ($, window, undefined) {
         this.arcDragOrigin = null; // TODO
 
         // due to silly Chrome bug, I have to make it pay attention
+        /*
         var forceRedraw = function () {
             if (!$.browser.chrome) return; // not needed
             $svg.css('margin-bottom', 1);
             setTimeout(function () { $svg.css('margin-bottom', 0); }, 0);
-        }
+        }*/
 
         // Computes the bounding box for a span, considering translations.
         var rowBBox = function (span) {
@@ -1592,6 +1593,7 @@ var Visualizer = (function ($, window, undefined) {
                         'data-fragment-id': fragment.id,
                         'strokeDashArray': span.attributeMerge.dashArray,
                     });
+                    console.log(fragment.rect)
 
                     // TODO XXX: quick nasty hack to allow normalizations
                     // to be marked visually; do something cleaner!
@@ -2775,68 +2777,107 @@ var Visualizer = (function ($, window, undefined) {
         var highlight, highlightArcs, highlightSpans, commentId;
 
         var onMouseOver = function (evt) {
+            /*
+            console.log('Event target:', evt.target);
+            if (evt.target.getAttribute('data-span-id')) {
+                console.log('Direct data-span-id:', evt.target.getAttribute('data-span-id'));
+            }
             var target = $(evt.target);
+            // Ensure target is a proper jQuery object
+            if (!(target instanceof jQuery)) {
+                target = $(target[0]);
+            }
+            console.log('jQuery target:', target)
+            */
             var id;
-            if (id = target.attr('data-span-id')) {
+            if (id = evt.target.getAttribute('data-span-id')) {
                 commentId = id;
                 var span = data.spans[id];
-                dispatcher.post('displaySpanComment', [
-                    evt, target, id, span.type, span.attributeText,
-                    span.text,
-                    span.comment && span.comment.text,
-                    span.comment && span.comment.type,
-                    span.normalizations]);
+                console.log('Retrieved span ID:', id);
+                if (span !== undefined) {
+                    console.log('Span data:', span);
+                    dispatcher.post('displaySpanComment', [
+                        evt, evt.target, id, span.type, span.attributeText,
+                        span.text,
+                        span.comment && span.comment.text,
+                        span.comment && span.comment.type,
+                        span.normalizations]);
 
-                var spanDesc = spanTypes[span.type];
-                var bgColor = ((spanDesc && spanDesc.bgColor) ||
-                    (spanTypes.SPAN_DEFAULT && spanTypes.SPAN_DEFAULT.bgColor) ||
-                    '#ffffff');
-                highlight = [];
-                $.each(span.fragments, function (fragmentNo, fragment) {
-                    highlight.push(svg.rect(highlightGroup,
-                        fragment.highlightPos.x, fragment.highlightPos.y,
-                        fragment.highlightPos.w, fragment.highlightPos.h,
-                        {
-                            'fill': bgColor, opacity: 0.75,
-                            rx: highlightRounding.x,
-                            ry: highlightRounding.y,
-                        }));
-                });
+                    var spanDesc = spanTypes[span.type];
+                    var bgColor = ((spanDesc && spanDesc.bgColor) ||
+                        (spanTypes.SPAN_DEFAULT && spanTypes.SPAN_DEFAULT.bgColor) ||
+                        '#ffffff');
+                    if (span.hidden) return;
+                    highlight = [];
+                    $.each(span.fragments, function (fragmentNo, fragment) {
+                        highlight.push(svg.rect(highlightGroup,
+                            fragment.highlightPos.x, fragment.highlightPos.y,
+                            fragment.highlightPos.w, fragment.highlightPos.h,
+                            {
+                                'fill': bgColor, opacity: 0.75,
+                                rx: highlightRounding.x,
+                                ry: highlightRounding.y,
+                            }));
+                    });
+                }
 
                 if (that.arcDragOrigin) {
-                    target.parent().addClass('highlight');
+                    evt.target.parent().addClass('highlight');
                 } else {
-                    highlightArcs = $svg.
-                        find('g[data-from="' + id + '"], g[data-to="' + id + '"]').
-                        addClass('highlight');
+                    var equivs = {};
                     var spans = {};
                     spans[id] = true;
                     var spanIds = [];
-                    $.each(span.incoming, function (arcNo, arc) {
-                        spans[arc.origin] = true;
+                    // find all arcs, normal and equiv. Equivs need to go far (#1023)
+                    var addArcAndSpan = function (arc, span) {
+                        if (arc.equiv) {
+                            equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
+                            var eventDesc = data.eventDescs[arc.eventDescId];
+                            $.each(eventDesc.leftSpans.concat(eventDesc.rightSpans), function (ospanId, ospan) {
+                                spans[ospan] = true;
+                            });
+                        } else {
+                            spans[arc.origin] = true;
+                        }
+                    }
+                    if (span !== undefined) {
+                        $.each(span.incoming, function (arcNo, arc) {
+                            addArcAndSpan(arc, arc.origin);
+                        });
+                        $.each(span.outgoing, function (arcNo, arc) {
+                            addArcAndSpan(arc, arc.target);
+                        });
+                    }
+                    var equivSelector = [];
+                    $.each(equivs, function (equiv, dummy) {
+                        equivSelector.push('[data-arc-ed^="' + equiv + '"]');
                     });
-                    $.each(span.outgoing, function (arcNo, arc) {
-                        spans[arc.target] = true;
-                    });
+
+                    highlightArcs = $svg.
+                        find(equivSelector.join(', ')).
+                        parent().
+                        add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector).
+                        addClass('highlight');
+                    //console.log(spans)
                     $.each(spans, function (spanId, dummy) {
                         spanIds.push('rect[data-span-id="' + spanId + '"]');
+                        //console.log(spanIds)
                     });
                     highlightSpans = $svg.
                         find(spanIds.join(', ')).
                         parent().
                         addClass('highlight');
                 }
-                forceRedraw();
-            } else if (!that.arcDragOrigin && (id = target.attr('data-arc-role'))) {
-                var originSpanId = target.attr('data-arc-origin');
-                var targetSpanId = target.attr('data-arc-target');
-                var role = target.attr('data-arc-role');
+            } else if (!that.arcDragOrigin && (id = evt.target.getAttribute('data-arc-role'))) {
+                var originSpanId = evt.target.getAttribute('data-arc-origin');
+                var targetSpanId = evt.target.getAttribute('data-arc-target');
+                var role = evt.target.getAttribute('data-arc-role');
                 var symmetric = (relationTypesHash &&
                     relationTypesHash[role] &&
                     relationTypesHash[role].properties &&
                     relationTypesHash[role].properties.symmetric);
                 // NOTE: no commentText, commentType for now
-                var arcEventDescId = target.attr('data-arc-ed');
+                var arcEventDescId = evt.target.getAttribute('data-arc-ed');
                 var commentText = '';
                 var commentType = '';
                 var arcId;
@@ -2860,7 +2901,7 @@ var Visualizer = (function ($, window, undefined) {
                 var originSpanType = data.spans[originSpanId].type || '';
                 var targetSpanType = data.spans[targetSpanId].type || '';
                 dispatcher.post('displayArcComment', [
-                    evt, target, symmetric, arcId,
+                    evt, evt.target, symmetric, arcId,
                     originSpanId, originSpanType, role,
                     targetSpanId, targetSpanType,
                     commentText, commentType]);
@@ -2871,16 +2912,20 @@ var Visualizer = (function ($, window, undefined) {
                     find('rect[data-span-id="' + originSpanId + '"], rect[data-span-id="' + targetSpanId + '"]').
                     parent().
                     addClass('highlight');
-            } else if (id = target.attr('data-sent')) {
+            } else if (id = evt.target.getAttribute('data-sent')) {
                 var comment = data.sentComment[id];
                 if (comment) {
-                    dispatcher.post('displaySentComment', [evt, target, comment.text, comment.type]);
+                    dispatcher.post('displaySentComment', [evt, evt.target, comment.text, comment.type]);
                 }
             }
         };
 
+
         var onMouseOut = function (evt) {
+            console.log('Event target:', evt.target);
             var target = $(evt.target);
+            console.log('jQuery target:', target)
+
             target.removeClass('badTarget');
             dispatcher.post('hideComment');
             if (highlight) {
@@ -2894,7 +2939,7 @@ var Visualizer = (function ($, window, undefined) {
                 highlightSpans.removeClass('highlight');
                 highlightSpans = undefined;
             }
-            forceRedraw();
+            //forceRedraw();
         };
 
         var setAbbrevs = function (_abbrevsOn) {

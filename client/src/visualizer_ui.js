@@ -1751,19 +1751,22 @@ var VisualizerUI = (function ($, window, undefined) {
                 var span = data.spans[id];
 
                 var urlHash = URLHash.parse(window.location.hash);
-                urlHash.setArgument('focus', [[span.id]]);
+                if (span !== undefined) {
+                    urlHash.setArgument('focus', [[span.id]]);
+                }
                 $('#viewspan_highlight_link').show().attr('href', urlHash.getHash());
-
-                $('#viewspan_selected').text(span.text);
-                var encodedText = encodeURIComponent(span.text);
-                $.each(searchConfig, function (searchNo, search) {
-                    $('#viewspan_' + search[0]).attr('href', search[1].replace('%s', encodedText));
-                });
-                // annotator comments
-                $('#viewspan_notes').val(span.annotatorNotes || '');
-                dispatcher.post('showForm', [viewspanForm]);
-                $('#viewspan_form-ok').focus();
-                adjustFormToCursor(evt, viewspanForm.parent());
+                if (span !== undefined) {
+                    $('#viewspan_selected').text(span.text);
+                    var encodedText = encodeURIComponent(span.text);
+                    $.each(searchConfig, function (searchNo, search) {
+                        $('#viewspan_' + search[0]).attr('href', search[1].replace('%s', encodedText));
+                    });
+                    // annotator comments
+                    $('#viewspan_notes').val(span.annotatorNotes || '');
+                    dispatcher.post('showForm', [viewspanForm]);
+                    $('#viewspan_form-ok').focus();
+                    adjustFormToCursor(evt, viewspanForm.parent());
+                }
             }
         };
         viewspanForm.submit(function (evt) {
