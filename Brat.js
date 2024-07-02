@@ -1,6 +1,6 @@
 //import $ from './client/lib/node-jquery-1.7.1'; //require('jquery-node-browserify'); // @1.7.2 ++
 // <script src="./client/lib/node-jquery-1.7.1"></script>
-const LONG_ANNOTATION_CONST = "LongAnnotation";
+
 import Configuration from "./client/src/configuration.js"
 import Dispatcher from "./client/src/dispatcher.js"
 import LocalAjax from "./client/src/local_ajax.js"
@@ -13,7 +13,7 @@ let dispatcher = new Dispatcher();
 console.log(dispatcher)
 //let util = Util
 //console.log(util)
-
+const LONG_ANNOTATION_CONST = "LongAnnotation";
 
 export class BratFrontendEditor {
     constructor(element, collData = {}, docData = {}, options = {}) {

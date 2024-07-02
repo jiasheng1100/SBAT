@@ -301,6 +301,85 @@ var VisualizerUI = (function ($, window, undefined) {
             return cmp(a[2], b[2]);
         }
 
+        var fillNormInfo = function (infoData, infoSeqId) {
+            // extend comment popup with normalization data
+            var norminfo = '';
+            // flatten outer (name, attr, info) array (idx for sort)
+            var infos = [];
+            var idx = 0;
+            for (var i = 0; i < infoData.length; i++) {
+                for (var j = 0; j < infoData[i].length; j++) {
+                    var label = infoData[i][j][0];
+                    var value = infoData[i][j][1];
+                    infos.push([label, value, idx++]);
+                }
+            }
+            // sort, prioritizing images (to get floats right)
+            infos = infos.sort(normInfoSortFunction);
+            // combine several consequtive values with the same label
+            var combined = [];
+            var prev_label = '';
+            for (var i = 0; i < infos.length; i++) {
+                var label = infos[i][0];
+                var value = infos[i][1];
+                if (label == prev_label) {
+                    combined[combined.length - 1][1] += ', ' + value;
+                } else {
+                    combined.push([label, value]);
+                }
+                prev_label = label;
+            }
+            infos = combined;
+            // generate HTML
+            for (var i = 0; i < infos.length; i++) {
+                var label = infos[i][0];
+                var value = infos[i][1];
+                if (label && value) {
+                    // special treatment for some label values
+                    if (label.toLowerCase() == '<img>') {
+                        norminfo += ('<img class="norm_info_img" src="' +
+                            Util.escapeHTML(value) +
+                            '"/>');
+                    } else {
+                        // normal, as text
+
+                        // max length restriction
+                        if (value.length > 300) {
+                            value = value.substr(0, 300) + ' ...';
+                        }
+
+                        norminfo += ('<span class="norm_info_label">' +
+                            Util.escapeHTML(label) +
+                            '</span>' +
+                            '<span class="norm_info_value">' + ':' +
+                            Util.escapeHTML(value) +
+                            '</span>' +
+                            '<br/>');
+                    }
+                }
+            }
+            var drop = $('#norm_info_drop_point_' + infoSeqId);
+            if (drop.length) {
+                drop.html(norminfo);
+                adjustToCursor(null, commentPopup, 10, true, true);
+            } else {
+                console.log('norm info drop point not found!'); //TODO XXX
+            }
+        }
+
+        var normCacheGet = function (dbName, dbKey, value) {
+            return normInfoCache[dbName + ':' + dbKey];
+        }
+        var normCachePut = function (dbName, dbKey, value) {
+            // TODO: non-stupid cache max size limit
+            if (normInfoCacheSize >= normInfoCacheMaxSize) {
+                normInfoCache = {};
+                normInfoCacheSize = 0;
+            }
+            normInfoCache[dbName + ':' + dbKey] = value;
+            normInfoCacheSize++;
+        }
+
         var displaySpanComment = function (
             evt, target, spanId, spanType, mods, spanText, commentText,
             commentType, normalizations) {
@@ -368,69 +447,26 @@ var VisualizerUI = (function ($, window, undefined) {
             $.each(normsToQuery, function (normqNo, normq) {
                 // TODO: cache some number of most recent norm_get_data results
                 var dbName = normq[0], dbKey = normq[1], infoSeqId = normq[2];
-                dispatcher.post('ajax', [{
-                    action: 'normData',
-                    database: dbName,
-                    key: dbKey,
-                    collection: coll,
-                },
-                function (response) {
-                    if (response.exception) {
-                        ; // TODO: response to error
-                    } else if (!response.value) {
-                        ; // TODO: response to missing key
-                    } else {
-                        // extend comment popup with normalization data
-                        norminfo = '';
-                        // flatten outer (name, attr, info) array (idx for sort)
-                        infos = [];
-                        var idx = 0;
-                        for (var i = 0; i < response.value.length; i++) {
-                            for (var j = 0; j < response.value[i].length; j++) {
-                                var label = response.value[i][j][0];
-                                var value = response.value[i][j][1];
-                                infos.push([label, value, idx++]);
-                            }
-                        }
-                        // sort, prioritizing images (to get floats right)
-                        infos = infos.sort(normInfoSortFunction);
-                        // generate HTML
-                        for (var i = 0; i < infos.length; i++) {
-                            var label = infos[i][0];
-                            var value = infos[i][1];
-                            if (label && value) {
-                                // special treatment for some label values
-                                if (label.toLowerCase() == '<img>') {
-                                    // image
-                                    norminfo += ('<img class="norm_info_img" src="' +
-                                        value +
-                                        '"/>');
-                                } else {
-                                    // normal, as text
-
-                                    // max length restriction
-                                    if (value.length > 300) {
-                                        value = value.substr(0, 300) + ' ...';
-                                    }
-
-                                    norminfo += ('<span class="norm_info_label">' +
-                                        escapeHTML(label) +
-                                        '</span>' +
-                                        '<span class="norm_info_value">' + ':' +
-                                        escapeHTML(value) +
-                                        '</span>' +
-                                        '<br/>');
-                                }
-                            }
-                        }
-                        var drop = $('#norm_info_drop_point_' + infoSeqId);
-                        if (drop) {
-                            drop.html(norminfo);
+                if (normCacheGet(dbName, dbKey)) {
+                    fillNormInfo(normCacheGet(dbName, dbKey), infoSeqId);
+                } else {
+                    dispatcher.post('ajax', [{
+                        action: 'normData',
+                        database: dbName,
+                        key: dbKey,
+                        collection: coll,
+                    },
+                    function (response) {
+                        if (response.exception) {
+                            ; // TODO: response to error
+                        } else if (!response.value) {
+                            ; // TODO: response to missing key
                         } else {
-                            console.log('norm info drop point not found!'); //TODO XXX
+                            fillNormInfo(response.value, infoSeqId);
+                            normCachePut(dbName, dbKey, response.value);
                         }
-                    }
-                }]);
+                    }]);
+                }
             });
         };
 
@@ -537,7 +573,7 @@ var VisualizerUI = (function ($, window, undefined) {
             }, opts);
 
             form.dialog(opts);
-            form.bind('dialogclose', function () {
+            form.on('dialogbeforeclose', function (evt) {
                 if (form == currentForm) {
                     currentForm = null;
                 }
@@ -553,14 +589,41 @@ var VisualizerUI = (function ($, window, undefined) {
             }
         };
 
-        var showForm = function (form) {
-            currentForm = form;
-            if (!overWriteModals) {
-                // as suggested in http://stackoverflow.com/questions/2657076/jquery-ui-dialog-fixed-positioning
-                form.parent().css({ position: "fixed" });
-                form.dialog('open');
-                slideToggle($('#pulldown').stop(), false);
+        var unsafeDialogOpen = function ($dialog) {
+            // does not restrict tab key to the dialog
+            // does not set the focus, nor change position
+            // but is much faster than dialog('open') for large dialogs, see
+            // https://github.com/nlplab/brat/issues/934
+
+            var self = $dialog.dialog('instance');
+
+            if (self._isOpen) { return; }
+
+            self._isOpen = true;
+            self.opener = $(self.document[0].activeElement);
+
+            self._size();
+            self._createOverlay();
+            self._moveToTop(null, true);
+
+            if (self.overlay) {
+                self.overlay.css("z-index", self.uiDialog.css("z-index") - 1);
             }
+            self._show(self.uiDialog, self.options.show);
+            self._trigger('open');
+        };
+
+
+        var showForm = function (form, unsafe) {
+            currentForm = form;
+            // as suggested in http://stackoverflow.com/questions/2657076/jquery-ui-dialog-fixed-positioning
+            form.parent().css({ position: "fixed" });
+            if (unsafe) {
+                unsafeDialogOpen(form);
+            } else {
+                form.dialog('open');
+            }
+            slideToggle($('#pulldown').stop(), false);
             return form;
         };
 

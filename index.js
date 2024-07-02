@@ -413,9 +413,13 @@ if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
         let brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData, options);
         //brat.init()
-        console.log(brat)
+        //console.log(brat)
         brat.dispatcher.on('sglclick', this, function (data) {
             console.log(data);
+        });
+
+        brat.dispatcher.on('sglclick', this, function () {
+            console.log(docData);
         });
     });
 }

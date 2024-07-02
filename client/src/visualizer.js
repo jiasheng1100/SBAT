@@ -1593,7 +1593,6 @@ var Visualizer = (function ($, window, undefined) {
                         'data-fragment-id': fragment.id,
                         'strokeDashArray': span.attributeMerge.dashArray,
                     });
-                    console.log(fragment.rect)
 
                     // TODO XXX: quick nasty hack to allow normalizations
                     // to be marked visually; do something cleaner!
@@ -2793,9 +2792,9 @@ var Visualizer = (function ($, window, undefined) {
             if (id = evt.target.getAttribute('data-span-id')) {
                 commentId = id;
                 var span = data.spans[id];
-                console.log('Retrieved span ID:', id);
+                //console.log('Retrieved span ID:', id);
                 if (span !== undefined) {
-                    console.log('Span data:', span);
+                    //console.log('Span data:', span);
                     dispatcher.post('displaySpanComment', [
                         evt, evt.target, id, span.type, span.attributeText,
                         span.text,
@@ -2922,9 +2921,9 @@ var Visualizer = (function ($, window, undefined) {
 
 
         var onMouseOut = function (evt) {
-            console.log('Event target:', evt.target);
+            //console.log('Event target:', evt.target);
             var target = $(evt.target);
-            console.log('jQuery target:', target)
+            //console.log('jQuery target:', target)
 
             target.removeClass('badTarget');
             dispatcher.post('hideComment');

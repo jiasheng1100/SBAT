@@ -67,6 +67,9 @@ var AnnotatorUI = (function ($, window, undefined) {
         var svgElement = $(svg._svg);
         var svgId = svgElement.parent().attr('id');
 
+        var args;
+        var svgPosition;
+
         var stripNumericSuffix = function (s) {
             // utility function, originally for stripping numerix suffixes
             // from arc types (e.g. "Theme2" -> "Theme"). For values
@@ -162,22 +165,19 @@ var AnnotatorUI = (function ($, window, undefined) {
         };
 
         var onDblClick = function (evt) {
-            // must be logged in
-            //Removed by Renaud on 2016-03-10
-            //if (that.user === null) return;
             // must not be reselecting a span or an arc
             if (reselectedSpan || arcDragOrigin) return;
 
-            var target = $(evt.target);
+            //var target = $(evt.target);
             var id;
 
             // do we edit an arc?
-            if (id = target.attr('data-arc-role')) {
+            if (id = evt.target.getAttribute('data-arc-role')) {
                 // TODO
                 clearSelection();
-                var originSpanId = target.attr('data-arc-origin');
-                var targetSpanId = target.attr('data-arc-target');
-                var type = target.attr('data-arc-role');
+                var originSpanId = evt.target.getAttribute('data-arc-origin');
+                var targetSpanId = evt.target.getAttribute('data-arc-target');
+                var type = evt.target.getAttribute('data-arc-role');
                 var originSpan = data.spans[originSpanId];
                 var targetSpan = data.spans[targetSpanId];
                 arcOptions = {
@@ -190,14 +190,12 @@ var AnnotatorUI = (function ($, window, undefined) {
                     collection: coll,
                     'document': doc
                 };
-                var eventDescId = target.attr('data-arc-ed');
+                var eventDescId = evt.target.getAttribute('data-arc-ed');
                 if (eventDescId) {
                     var eventDesc = data.eventDescs[eventDescId];
-                    if (eventDesc !== undefined) {
-                        if (eventDesc.equiv) {
-                            arcOptions['left'] = eventDesc.leftSpans.join(',');
-                            arcOptions['right'] = eventDesc.rightSpans.join(',');
-                        }
+                    if (eventDesc.equiv) {
+                        arcOptions['left'] = eventDesc.leftSpans.join(',');
+                        arcOptions['right'] = eventDesc.rightSpans.join(',');
                     }
                 }
                 if (originSpan !== undefined) {
@@ -211,10 +209,10 @@ var AnnotatorUI = (function ($, window, undefined) {
                 dispatcher.post('logAction', ['arcEditSelected']);
 
                 // if not an arc, then do we edit a span?
-            } else if (id = target.attr('data-span-id')) {
+            } else if (id = evt.target.getAttribute('data-span-id')) {
                 clearSelection();
                 editedSpan = data.spans[id];
-                editedFragment = target.attr('data-fragment-id');
+                editedFragment = evt.target.getAttribute('data-fragment-id');
                 var offsets = [];
                 $.each(editedSpan.fragments, function (fragmentNo, fragment) {
                     offsets.push([fragment.from, fragment.to]);
@@ -231,7 +229,7 @@ var AnnotatorUI = (function ($, window, undefined) {
             }
 
             // if not an arc or a span, is this a double-click on text?
-            else if (id = target.attr('data-chunk-id')) {
+            else if (id = evt.target.getAttribute('data-chunk-id')) {
                 // remember what was clicked (this is in preparation for
                 // simulating double-click selection on browsers that do
                 // not support it.
@@ -242,14 +240,15 @@ var AnnotatorUI = (function ($, window, undefined) {
         var startArcDrag = function (originId) {
             clearSelection();
             svgElement.addClass('unselectable');
-            var svgPosition = svgElement.offset();
+            svgPosition = svgElement.offset();
+            //console.log("svg position:", svgPosition)
             arcDragOrigin = originId;
             arcDragArc = svg.path(svg.createPath(), {
                 markerEnd: 'url(#drag_arrow)',
                 'class': 'drag_stroke',
                 fill: 'none',
             });
-            console.log($(data.spans))
+            //console.log($(data.spans))
             /*
             arcDragOriginGroup = $(data.spans[arcDragOrigin].group);
             arcDragOriginGroup.addClass('highlight');
@@ -284,10 +283,10 @@ var AnnotatorUI = (function ($, window, undefined) {
             //Removed by Renaud on 2016-03-10
             //if (!that.user || arcDragOrigin) return;
             if (arcDragOrigin) return;
-            var target = $(evt.target);
+            //var target = $(evt.target);
             var id;
             // is it arc drag start?
-            if (id = target.attr('data-span-id')) {
+            if (id = evt.target.getAttribute('data-span-id')) {
                 arcOptions = null;
                 startArcDrag(id);
                 return false;
@@ -746,7 +745,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     var category = ct[0];
                     var attributeTypes = ct[1];
                     $.each(attributeTypes, function (attrNo, attr) {
-                        $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
+                        var $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
                         if (attr.unused) {
                             $input.val('');
                         } else if (attr.bool) {
@@ -773,7 +772,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     console.error('Unrecognized generalType:', span.generalType);
                 }
                 $.each(attributeTypes, function (attrNo, attr) {
-                    $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
+                    var $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
                     var val = span.attributes[attr.type];
                     if (attr.unused) {
                         $input.val(val || '');
@@ -851,10 +850,12 @@ var AnnotatorUI = (function ($, window, undefined) {
                     var $input = $('#' + category + '_attr_' + escapeQuotes(attr.type));
                     var showAttr = showAllAttributes || $.inArray(attr.type, validAttrs) != -1;
                     if (showAttr) {
-                        $input.button('widget').show();
+                        //$input.button('widget').show();
+                        $input.closest('.attribute_type_label').show();
                         shownCount++;
                     } else {
-                        $input.button('widget').hide();
+                        //$input.button('widget').hide();
+                        $input.closest('.attribute_type_label').hide();
                     }
                 });
                 return shownCount;
@@ -1486,7 +1487,7 @@ var AnnotatorUI = (function ($, window, undefined) {
         };
 
         var reverseArc = function (evt) {
-            var eventDataId = $(evt.target).attr('data-arc-ed');
+            var eventDataId = evt.target.getAttribute('data-arc-ed');
             dispatcher.post('hideForm');
             arcOptions.action = 'reverseArc';
             delete arcOptions.old_target;
@@ -1498,7 +1499,7 @@ var AnnotatorUI = (function ($, window, undefined) {
             if (Configuration.confirmModeOn && !confirm("Are you sure you want to delete this annotation?")) {
                 return;
             }
-            var eventDataId = $(evt.target).attr('data-arc-ed');
+            var eventDataId = evt.target.getAttribute('data-arc-ed');
             dispatcher.post('hideForm');
             arcOptions.action = 'deleteArc';
             dispatcher.post('ajax', [arcOptions, 'edited']);
@@ -1611,8 +1612,8 @@ var AnnotatorUI = (function ($, window, undefined) {
             } else if (!evt.ctrlKey) {
                 // if not, then is it span selection? (ctrl key cancels)
                 var sel = window.getSelection();
-                var chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
-                var chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
+                var chunkIndexFrom = sel.anchorNode && sel.anchorNode.parentNode.getAttribute('data-chunk-id');
+                var chunkIndexTo = sel.focusNode && sel.focusNode.parentNode.getAttribute('data-chunk-id');
 
                 // fallback for firefox (at least):
                 // it's unclear why, but for firefox the anchor and focus
@@ -1624,8 +1625,8 @@ var AnnotatorUI = (function ($, window, undefined) {
                 var anchorOffset = null;
                 var focusOffset = null;
                 if (chunkIndexFrom === undefined && chunkIndexTo === undefined &&
-                    $(sel.anchorNode).attr('data-chunk-id') &&
-                    $(sel.focusNode).attr('data-chunk-id')) {
+                    sel.anchorNode.getAttribute('data-chunk-id') &&
+                    sel.focusNode.getAttribute('data-chunk-id')) {
                     // A. Scerri FireFox chunk
 
                     var range = sel.getRangeAt(0);
@@ -1638,7 +1639,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                         sp.y = (flip ? evt.pageY : dragStartedAt.pageY) - (svgOffset.top + 8);
                         var startsAt = range.startContainer;
                         anchorOffset = startsAt.getCharNumAtPosition(sp);
-                        chunkIndexFrom = startsAt && $(startsAt).attr('data-chunk-id');
+                        chunkIndexFrom = startsAt && startsAt.getAttribute('data-chunk-id');
                         if (anchorOffset != -1) {
                             break;
                         }
@@ -1659,7 +1660,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     if (focusOffset != -1) {
                         focusOffset++;
                     }
-                    chunkIndexTo = endsAt && $(endsAt).attr('data-chunk-id');
+                    chunkIndexTo = endsAt && endsAt.getAttribute('data-chunk-id');
 
                     //console.log('fallback from', data.chunks[chunkIndexFrom], anchorOffset);
                     //console.log('fallback to', data.chunks[chunkIndexTo], focusOffset);
@@ -2237,7 +2238,7 @@ var AnnotatorUI = (function ($, window, undefined) {
         var gotCurrent = function (_coll, _doc, _args) {
             coll = _coll;
             doc = _doc;
-            //args = _args;
+            args = _args;
         };
 
         var undoStack = [];

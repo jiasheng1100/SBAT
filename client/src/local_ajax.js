@@ -79,6 +79,7 @@ class LocalAjax {
     }
 
     splitTooLongFragment(offsets, data, e_id) {
+        const LONG_ANNOTATION_CONST = "LongAnnotation";
         let new_offsets = [];
 
         if (
@@ -150,7 +151,7 @@ class LocalAjax {
                 }
             }
 
-            if (data.comment.length) {
+            if (data.comment) {
                 const comment = data.document.comments.find(x => x[0] === data.id);
                 if (comment) {
                     comment[2] = data.comment;
