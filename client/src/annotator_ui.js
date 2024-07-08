@@ -249,12 +249,12 @@ var AnnotatorUI = (function ($, window, undefined) {
                 fill: 'none',
             });
             //console.log($(data.spans))
-            /*
+
             arcDragOriginGroup = $(data.spans[arcDragOrigin].group);
             arcDragOriginGroup.addClass('highlight');
             arcDragOriginBox = realBBox(data.spans[arcDragOrigin].headFragment);
             arcDragOriginBox.center = arcDragOriginBox.x + arcDragOriginBox.width / 2;
-            */
+
 
             arcDragJustStarted = true;
         };
@@ -1671,6 +1671,8 @@ var AnnotatorUI = (function ($, window, undefined) {
                 }
 
                 if (chunkIndexFrom !== undefined && chunkIndexTo !== undefined) {
+                    console.log("data.chunks:", data.chunks)
+                    console.log("chunkIndexFrom:", chunkIndexFrom)
                     var chunkFrom = data.chunks[chunkIndexFrom];
                     var chunkTo = data.chunks[chunkIndexTo];
                     var selectedFrom = chunkFrom.from + anchorOffset;

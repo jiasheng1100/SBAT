@@ -2,9 +2,14 @@
 //const defaultExport = BratFrontendEditor.default;
 import { BratFrontendEditor } from "./Brat.js"
 
-//let centerColumn = document.getElementById('centerColumn')
+let fileSelector = document.getElementById('fileSelector');
+let downloadButton = document.getElementById('downloadButton');
+let downloadArea = document.getElementById('downloadArea');
+let brat;
 
-var collData = {
+downloadArea.hidden = true;
+
+let collData = {
     "messages": [],
     "items": [],
     "ui_names": {
@@ -101,23 +106,7 @@ var collData = {
                             "children": []
                         }
                     ]
-                }/*,
-                         {
-                         "name": "Teenager",
-                         "type"   : "Person",
-                         "labels" : ["Person", "Per"],
-                         "bgColor": "#FE2E2E",
-                         "borderColor": "darken",
-                         "children": [],
-                         },
-                         {
-                         "name": "Adult",
-                         "type"   : "Adult",
-                         "labels" : ["Adult", "Adult"],
-                         "bgColor": "#FE2E2E",
-                         "borderColor": "darken",
-                         "children": []
-                         }*/
+                }
             ]
         },
         //null, //will produde <hr> between entity groups or single entities but generate bugs with current code
@@ -354,7 +343,7 @@ var collData = {
     ]
 };
 
-var docData = {
+let docData = {
     "messages": [],
     "source_files": ["ann", "txt"],
     "modifications": [],
@@ -396,7 +385,7 @@ var docData = {
     ]
 };
 
-var options = {
+let options = {
     assetsPath: "static/",
     webFontURLs: [//
         'fonts/Astloch-Bold.ttf',
@@ -411,15 +400,103 @@ var options = {
 
 if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
-        let brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData, options);
+        brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData, options);
         //brat.init()
-        //console.log(brat)
+        console.log(brat)
         brat.dispatcher.on('sglclick', this, function (data) {
             console.log(data);
         });
 
         brat.dispatcher.on('sglclick', this, function () {
-            console.log(docData);
+            console.log(brat);
         });
     });
+}
+
+downloadButton.addEventListener('click', downloadButtonClicked);
+fileSelector.addEventListener('change', (event) => {
+    getFileData(event.target.files[0]);
+    downloadArea.hidden = false;
+})
+
+function downloadButtonClicked() {
+    console.log("downloadButtonClicked")
+    let dataToWrite = new Object();
+    dataToWrite.docData = docData;
+    dataToWrite.collData = collData;
+    let textFileAsBlob = new Blob([JSON.stringify(dataToWrite, null, "\t")], { type: 'application/json' });
+    let downloadLink = document.createElement("a");
+    downloadLink.download = document.getElementById('fileNameToSaveAs').value;
+    downloadLink.innerHTML = "Download File";
+    if (window.webkitURL != null) {
+        // Chrome allows the link to be clicked
+        // without actually adding it to the DOM.
+        downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+    }
+    else {
+        // Firefox requires the link to be added to the DOM
+        // before it can be clicked.
+        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+        downloadLink.onclick = destroyClickedElement;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+    }
+    // Programmatically clicks the download link
+    downloadLink.click();
+}
+
+// remove the link element from the DOM after it is clicked
+function destroyClickedElement(event) {
+    document.body.removeChild(event.target);
+}
+
+function getFileData(uploadedFile) {
+    console.log("getFileData")
+    let reader = new FileReader();
+    reader.addEventListener('load', function (e) {
+        if (uploadedFile.type == 'text/plain') {
+            loadTxt(e.target.result);
+        }
+        if (uploadedFile.type == 'application/json') {
+            loadJson(e.target.result);
+        }
+    });
+    reader.readAsText(uploadedFile);
+}
+
+function loadTxt(textData) {
+    console.log("loadTxt")
+    docData = {
+        "messages": [],
+        "source_files": ["txt"],
+        "modifications": [],
+        "normalizations": [],
+        "ctime": 0,
+        "text": textData,
+        "entities": [],
+        "attributes": [],
+        "relations": [],
+        "triggers": [],
+        "events": [],
+        "comments": []
+    };
+    brat.docData = docData
+    updateBratEditor()
+}
+
+function loadJson(data) {
+    console.log("loadJson")
+    let json = data;
+    let parsedJson = JSON.parse(json);
+    docData = parsedJson.docData;
+    collData = parsedJson.collData;
+    updateBratEditor()
+}
+
+function updateBratEditor() {
+    if (brat) {
+        brat.dispatcher.post('collectionLoaded', [collData]);
+        brat.dispatcher.post('requestRenderData', [docData]);
+        brat.dispatcher.post('current', [collData, docData, {}]);
+    }
 }

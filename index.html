@@ -12,18 +12,11 @@
 
 <body>
     <div class="flex-container">
-
         <div id="leftPanel">
             <div id="logoArea">
                 <img src="SBATlogo.png" alt="SBAT logo" id="SBATlogo">
                 <h2>SBAT</h2>
                 <h5>A Simple Browser-based Annotation Tool</h5>
-            </div>
-            <div id="authenticationArea">
-                <p>Personal Access Token</p>
-                <textarea style="width: 150px; height: 50px;"
-                    id="personalAccessToken">Enter Personal Access Token here...</textarea>
-                <button id="authenticationOkayButton">Okay</button>
             </div>
             <div id="downloadArea">
                 <div>Save annotated file</div>
@@ -35,91 +28,8 @@
                 <input type="file" id="fileSelector" accept=".txt, .json" style="text-align:center">
             </div>
         </div>
+        <div id="brat"></div>
 
-        <div id="centerColumn">
-            <div id="annotationArea">
-                <h4 style="text-align:center">Add Annotations</h4>
-                <blockquote style="width:500px; height:200px" id="textAnnotation"></blockquote>
-                <div style="text-align: center;" id="labelButtonArea"></div>
-                <div style="text-align: center;" id="spanLabelButtonArea"></div>
-                <div id="orientationButtonArea" style="text-align:center">
-                    <button id="textBackwardButton">
-                        <---prev </button>
-                            <button id="textForwardButton"> next ---> </button>
-                </div>
-                <h4 style="text-align:center">Overview</h4>
-                <blockquote style="width:500px; height:200px" id="textDisplay"></blockquote>
-                <textarea id="numberOfTexts" readonly style="width:50px; height:20px"></textarea>
-            </div>
-        </div>
-
-        <div id="brat">
-        </div>
-
-        <div id="rightPanel">
-            <div id="checkboxArea">
-                <div>
-                    <label for="paginationDropdown">Pagination</label>
-                    <select id="paginationDropdown">
-                        <option id="pagination0" selected>0</option>
-                        <option id="pagination1">1</option>
-                        <option id="pagination2">2</option>
-                        <option id="pagination3">3</option>
-                    </select>
-                </div>
-                <div>
-                    <input type="checkbox" id="wholeDocumentSwitch">
-                    <label for="wholeDocumentSwitch">Show whole document</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="settingSwitch">
-                    <label for="settingSwitch" id="settingSwitchLabel">Show labels Setting</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="multilabelSwitch">
-                    <label for="multilabelSwitch">Allow multiple labels per text</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="localStorageSwitch">
-                    <label for="localStorageSwitch">Save data to localStorage</label>
-                </div>
-            </div>
-            <div id="labelSetArea">
-                <div id="labelSetInstructions">
-                    <p>Please enter your label set, one label per line. For hierarchical labels, enter subordinate
-                        labels underneath their parent label and begin the line of the subordinate label with a ></p>
-                    <div>
-                        For example:
-                        <div>
-                            Person
-                        </div>
-                        <div>
-                            >Politician
-                        </div>
-                    </div>
-                    <p>For multi-class classification, write the classname on a line beginning with a *, and write the
-                        labels underneath, beginning each line with a -.</p>
-                    <div>
-                        For example:
-                        <div>
-                            *Sentiment
-                        </div>
-                        <div>
-                            -Positive
-                        </div>
-                        <div>
-                            -Negative
-                        </div>
-                    </div>
-                </div>
-                <textarea style="width:150px; height:200px" id="enteredLabelSet"></textarea>
-                <button id="submitButton">Set Labels</button>
-                <button id="shortcutButton">Set Shortcuts</button>
-                <div id="shortcutArea">
-                    <button id="shortcutOkayButton" hidden>Okay</button>
-                </div>
-            </div>
-        </div>
     </div>
     <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
@@ -135,11 +45,7 @@
     <script src="./client/lib/jquery.json.min.js"></script>
     <script src="./client/lib/webfont.js"></script>
 
-    <script type="module" src="SBAT.js"></script>
     <script type="module" src="Brat.js"></script>
     <script type="module" src="index.js"></script>
-
-
-
 
 </body>
