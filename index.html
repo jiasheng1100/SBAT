@@ -27,6 +27,24 @@
                 <div>Upload new file (.txt / .json)</div>
                 <input type="file" id="fileSelector" accept=".txt, .json" style="text-align:center">
             </div>
+            <div id="authenticationArea">
+                <div id="patArea">
+                    <div>Personal Access Token</div>
+                    <textarea style="width: 150px; height: 50px;"
+                        id="personalAccessToken">Enter Personal Access Token here...</textarea>
+                    <button id="authenticationButton">Okay</button>
+                </div>
+                <div id="repoSelectArea">
+                    <div>Select a repository</div>
+                    <select id="repoSelect"></select>
+                    <button id="repoSelectButton">Select</button>
+                </div>
+                <div id="fileSelectArea">
+                    <div>Select a file</div>
+                    <select id="fileSelect"></select>
+                    <button id="fileSelectButton">Select</button>
+                </div>
+            </div>
         </div>
         <div id="brat"></div>
 
@@ -46,5 +64,6 @@
     <script src="./client/lib/webfont.js"></script>
 
     <script type="module" src="index.js"></script>
+    <script type="module" src="Authentication.js"></script>
 
 </body>

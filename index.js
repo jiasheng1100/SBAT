@@ -1,15 +1,12 @@
-//import * as BratFrontendEditor from "./dist/brat-frontend-editor.js";
-//const defaultExport = BratFrontendEditor.default;
 import { BratFrontendEditor } from "./Brat.js"
-//import data from './example.json';
-//import collData from './config.json';
+
 
 let fileSelector = document.getElementById('fileSelector');
 let downloadButton = document.getElementById('downloadButton');
 let downloadArea = document.getElementById('downloadArea');
-downloadArea.hidden = true;
 let brat;
 
+downloadArea.hidden = true;
 
 let options = {
     assetsPath: "static/", webFontURLs: ['fonts/Astloch-Bold.ttf', 'fonts/PT_Sans-Caption-Web-Regular.ttf', 'fonts/Liberation_Sans-Regular.ttf'], ajax: 'local', overWriteModals: false, maxFragmentLength: 30, showTooltip: true
