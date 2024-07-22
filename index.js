@@ -30,6 +30,8 @@ let repoName;
 let fileName;
 let text;
 let brat;
+let lastCommitSha;
+let lastCommitTreeSha;
 
 downloadArea.hidden = true;
 repoSelectArea.hidden = true;
@@ -38,10 +40,18 @@ fileCreateArea.hidden = true;
 commitMessageArea.hidden = true;
 
 
-authenticationButton.addEventListener('click', authenticationButtonClicked);
-commitAuthenticationButton.addEventListener('click', authenticationButtonClicked);
+authenticationButton.addEventListener('click', () => authenticationButtonClicked(personalAccessToken.value))
+commitAuthenticationButton.addEventListener('click', () => authenticationButtonClicked(commitPersonalAccessToken.value));
 repoSelectButton.addEventListener('click', getRepoFiles);
-fileSelectButton.addEventListener('click', getFileContent);
+fileSelectButton.addEventListener('click', () => {
+    console.log(personalAccessToken.value)
+    if (personalAccessToken.value.length > 0) {
+        getFileContent()
+    }
+    else {
+        getLastCommit().then(createNewCommit())
+    }
+});
 downloadButton.addEventListener('click', downloadButtonClicked);
 fileSelector.addEventListener('change', (event) => {
     getFileData(event.target.files[0]);
@@ -174,9 +184,8 @@ function updateBratEditor() {
 }
 
 
-async function authenticationButtonClicked() {
+async function authenticationButtonClicked(authKey) {
     console.log("authenticationButtonClicked")
-    let authKey = personalAccessToken.value;
     octokit = new Octokit({ auth: authKey });
     getUserName()
         .then(() => getUserRepos())
@@ -269,6 +278,7 @@ async function getFileContent() {
             }
         }
         fileSelectArea.hidden = true;
+        personalAccessToken.value = ""
         patArea.value = ""
         patArea.hidden = false;
         commitPatArea.hidden = false;
@@ -284,5 +294,82 @@ const extractJSON = (str) => {
         return true;
     } catch (e) {
         return false;
+    }
+}
+
+const getLastCommit = async () => {
+    try {
+        // get the SHA of the last commit
+        const { data: refData } = await octokit.rest.git.getRef({
+            owner: userName,
+            repo: repoName,
+            ref: `heads/main`,
+        })
+        lastCommitSha = refData.object.sha
+
+        // get the last commit's tree (the datastructure that actually holds the files)
+        const { data: commitData } = await octokit.rest.git.getCommit({
+            owner: userName,
+            repo: repoName,
+            commit_sha: lastCommitSha,
+        })
+        lastCommitTreeSha = commitData.tree.sha
+
+        console.log("last commit retrieval successful")
+
+    } catch (error) {
+        console.error('Error retrieving the last commit:', error);
+    }
+}
+
+const createNewCommit = async () => {
+    try {
+        fileName = fileSelect.value;
+        const dataToWrite = new Object();
+        dataToWrite.docData = docData;
+        dataToWrite.collData = collData;
+        //const dataAsJSONString = unescape(encodeURIComponent(JSON.stringify(dataToWrite, null, "\t")));
+        const dataAsJSONString = JSON.stringify(dataToWrite, null, "\t")
+        // create new tree and get the SHA of the new tree
+
+        const { data: treeData } = await octokit.rest.git.createTree({
+            owner: userName,
+            repo: repoName,
+            base_tree: lastCommitTreeSha,
+            tree: [
+                {
+                    path: fileName,
+                    mode: '100644',
+                    type: 'blob',
+                    content: dataAsJSONString
+                }
+            ]
+        });
+        const newTreeSha = treeData.sha;
+
+        // create new commit and get the SHA of the new commit
+        const { data: newCommitData } = await octokit.rest.git.createCommit({
+            owner: userName,
+            repo: repoName,
+            //message: commitMessage.value,
+            message: "test commit",
+            tree: newTreeSha,
+            parents: [lastCommitSha]
+        });
+        const newCommitSha = newCommitData.sha;
+
+        // Update the reference to point to the new commit
+        await octokit.rest.git.updateRef({
+            owner: userName,
+            repo: repoName,
+            ref: `heads/main`,
+            sha: newCommitSha
+        });
+
+        console.log('new commit creation successful!');
+
+
+    } catch (error) {
+        console.error('Error creating new commit:', error);
     }
 }
