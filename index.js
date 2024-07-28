@@ -1,10 +1,6 @@
 import { BratFrontendEditor } from "./Brat.js"
 import { Octokit } from "https://esm.sh/octokit@2.1.0";
 
-
-let fileSelector = document.getElementById('fileSelector');
-let downloadButton = document.getElementById('downloadButton');
-let downloadArea = document.getElementById('downloadArea');
 let patArea = document.getElementById('patArea')
 let repoSelectArea = document.getElementById('repoSelectArea')
 let fileSelectArea = document.getElementById('fileSelectArea')
@@ -14,14 +10,11 @@ let repoSelect = document.getElementById('repoSelect');
 let repoSelectButton = document.getElementById('repoSelectButton');
 let fileSelect = document.getElementById('fileSelect');
 let fileSelectButton = document.getElementById('fileSelectButton');
-let commitPatArea = document.getElementById('commitPatArea')
-let commitPersonalAccessToken = document.getElementById('commitPersonalAccessToken')
-let commitAuthenticationButton = document.getElementById('commitAuthenticationButton');
-let fileCreateArea = document.getElementById('fileCreateArea')
-let commitFileName = document.getElementById('commitFileName')
-let commitMessageArea = document.getElementById('commitMessageArea')
-let commitMessage = document.getElementById('commitMessage')
-let commitConfirmButton = document.getElementById('commitConfirmButton')
+let commitArea = document.getElementById('commitArea')
+let commitConfirmButton = document.getElementById('commitConfirmButton');
+let bratArea = document.getElementById('bratArea');
+
+let pat;
 let octokit;
 let userName;
 let repos;
@@ -33,30 +26,17 @@ let brat;
 let lastCommitSha;
 let lastCommitTreeSha;
 
-downloadArea.hidden = true;
+
 repoSelectArea.hidden = true;
 fileSelectArea.hidden = true;
-fileCreateArea.hidden = true;
-commitMessageArea.hidden = true;
+commitArea.hidden = true;
 
 
-authenticationButton.addEventListener('click', () => authenticationButtonClicked(personalAccessToken.value))
-commitAuthenticationButton.addEventListener('click', () => authenticationButtonClicked(commitPersonalAccessToken.value));
+authenticationButton.addEventListener('click', authenticationButtonClicked);
 repoSelectButton.addEventListener('click', getRepoFiles);
-fileSelectButton.addEventListener('click', () => {
-    console.log(personalAccessToken.value)
-    if (personalAccessToken.value.length > 0) {
-        getFileContent()
-    }
-    else {
-        getLastCommit().then(createNewCommit())
-    }
-});
-downloadButton.addEventListener('click', downloadButtonClicked);
-fileSelector.addEventListener('change', (event) => {
-    getFileData(event.target.files[0]);
-    downloadArea.hidden = false;
-})
+fileSelectButton.addEventListener('click', getFileContent);
+commitConfirmButton.addEventListener('click', commitButtonClicked);
+
 
 let options = {
     assetsPath: "static/", webFontURLs: ['fonts/Astloch-Bold.ttf', 'fonts/PT_Sans-Caption-Web-Regular.ttf', 'fonts/Liberation_Sans-Regular.ttf'], ajax: 'local', overWriteModals: false, maxFragmentLength: 30, showTooltip: true
@@ -93,50 +73,12 @@ fetch('./config.json')
                 initializeBrat()
             }
         })
+    .catch((err) => console.error(`error fetching config.json: ${err}`))
 
-function downloadButtonClicked() {
-    console.log("downloadButtonClicked")
-    let dataToWrite = new Object();
-    dataToWrite.docData = docData;
-    dataToWrite.collData = collData;
-    let textFileAsBlob = new Blob([JSON.stringify(dataToWrite, null, "\t")], { type: 'application/json' });
-    let downloadLink = document.createElement("a");
-    downloadLink.download = document.getElementById('fileNameToSaveAs').value;
-    downloadLink.innerHTML = "Download File";
-    if (window.webkitURL != null) {
-        // Chrome allows the link to be clicked
-        // without actually adding it to the DOM.
-        downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
-    }
-    else {
-        // Firefox requires the link to be added to the DOM
-        // before it can be clicked.
-        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-        downloadLink.onclick = destroyClickedElement;
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-    }
-    // Programmatically clicks the download link
-    downloadLink.click();
-}
 
-// remove the link element from the DOM after it is clicked
-function destroyClickedElement(event) {
-    document.body.removeChild(event.target);
-}
-
-function getFileData(uploadedFile) {
-    console.log("getFileData")
-    let reader = new FileReader();
-    reader.addEventListener('load', function (e) {
-        if (uploadedFile.type == 'text/plain') {
-            loadTxt(e.target.result);
-        }
-        if (uploadedFile.type == 'application/json') {
-            loadJson(e.target.result);
-        }
-    });
-    reader.readAsText(uploadedFile);
+if (localStorage.getItem("personalAccessToken") != null) {
+    personalAccessToken.value = localStorage.getItem("personalAccessToken")
+    console.log("personal access token found in local storage")
 }
 
 function loadTxt(textData) {
@@ -162,11 +104,9 @@ function loadTxt(textData) {
 function loadJson(data) {
     console.log("loadJson")
     let parsedJson = JSON.parse(data);
-    if (parsedJson.docData && parsedJson.collData) {
-        docData = parsedJson.docData;
-        collData = parsedJson.collData;
+    if (parsedJson.text && parsedJson.entities && parsedJson.attributes) {
+        docData = parsedJson;
         brat.docData = docData;
-        brat.collData = collData;
         updateBratEditor()
     } else {
         window.alert("Incompatible json format, file loaded as pure string")
@@ -177,22 +117,28 @@ function loadJson(data) {
 
 function updateBratEditor() {
     if (brat) {
-        brat.dispatcher.post('collectionLoaded', [collData]);
+        //brat.dispatcher.post('collectionLoaded', [collData]);
         brat.dispatcher.post('requestRenderData', [docData]);
         brat.dispatcher.post('current', [collData, docData, {}]);
     }
 }
 
 
-async function authenticationButtonClicked(authKey) {
+async function authenticationButtonClicked() {
     console.log("authenticationButtonClicked")
-    octokit = new Octokit({ auth: authKey });
+    pat = personalAccessToken.value
+    octokit = new Octokit({ auth: pat });
     getUserName()
         .then(() => getUserRepos())
     patArea.hidden = true;
     repoSelectArea.hidden = false;
-    commitPatArea.hidden = true;
+    bratArea.hidden = true;
+    localStorage.setItem("personalAccessToken", personalAccessToken.value)
+    console.log("personal access token saved in local storage")
+}
 
+async function commitButtonClicked() {
+    getLastCommit().then(createNewCommit())
 }
 
 const getUserName = async () => {
@@ -278,14 +224,11 @@ async function getFileContent() {
             }
         }
         fileSelectArea.hidden = true;
-        personalAccessToken.value = ""
-        patArea.value = ""
-        patArea.hidden = false;
-        commitPatArea.hidden = false;
-        downloadArea.hidden = false;
+        bratArea.hidden = false;
     } catch (error) {
         console.error('Error fetching file content:', error)
     }
+    commitArea.hidden = false;
 }
 
 const extractJSON = (str) => {
@@ -325,12 +268,7 @@ const getLastCommit = async () => {
 const createNewCommit = async () => {
     try {
         fileName = fileSelect.value;
-        const dataToWrite = new Object();
-        dataToWrite.docData = docData;
-        dataToWrite.collData = collData;
-        //const dataAsJSONString = unescape(encodeURIComponent(JSON.stringify(dataToWrite, null, "\t")));
-        const dataAsJSONString = JSON.stringify(dataToWrite, null, "\t")
-        // create new tree and get the SHA of the new tree
+        const dataAsJSONString = JSON.stringify(docData, null, "\t")
 
         const { data: treeData } = await octokit.rest.git.createTree({
             owner: userName,
@@ -373,3 +311,74 @@ const createNewCommit = async () => {
         console.error('Error creating new commit:', error);
     }
 }
+
+
+/* Implementation of uploading and downloading local file:
+
+            <div id="downloadArea" class="block">
+                <div>Save annotated file</div>
+                <textarea style="width:150px; height:50px" id="fileNameToSaveAs">Enter file name here...</textarea>
+                <button id="downloadButton" type="button">Download</button>
+            </div>
+            <div id="uploadArea" class="block">
+                <div>Upload new file (.txt / .json)</div>
+                <input type="file" id="fileSelector" accept=".txt, .json" style="text-align:center">
+            </div>
+            
+let fileSelector = document.getElementById('fileSelector');
+let downloadButton = document.getElementById('downloadButton');
+let downloadArea = document.getElementById('downloadArea');
+
+
+downloadButton.addEventListener('click', downloadButtonClicked);
+fileSelector.addEventListener('change', (event) => {
+    getFileData(event.target.files[0]);
+    downloadArea.hidden = false;
+})
+
+
+function downloadButtonClicked() {
+console.log("downloadButtonClicked")
+let dataToWrite = new Object();
+dataToWrite.docData = docData;
+dataToWrite.collData = collData;
+let textFileAsBlob = new Blob([JSON.stringify(dataToWrite, null, "\t")], { type: 'application/json' });
+let downloadLink = document.createElement("a");
+downloadLink.download = document.getElementById('fileNameToSaveAs').value;
+downloadLink.innerHTML = "Download File";
+if (window.webkitURL != null) {
+// Chrome allows the link to be clicked
+// without actually adding it to the DOM.
+downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+}
+else {
+// Firefox requires the link to be added to the DOM
+// before it can be clicked.
+downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+downloadLink.onclick = destroyClickedElement;
+downloadLink.style.display = "none";
+document.body.appendChild(downloadLink);
+}
+// Programmatically clicks the download link
+downloadLink.click();
+}
+
+// remove the link element from the DOM after it is clicked
+function destroyClickedElement(event) {
+document.body.removeChild(event.target);
+}
+
+function getFileData(uploadedFile) {
+console.log("getFileData")
+let reader = new FileReader();
+reader.addEventListener('load', function (e) {
+if (uploadedFile.type == 'text/plain') {
+loadTxt(e.target.result);
+}
+if (uploadedFile.type == 'application/json') {
+loadJson(e.target.result);
+}
+});
+reader.readAsText(uploadedFile);
+}
+*/

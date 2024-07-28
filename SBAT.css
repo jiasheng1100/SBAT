@@ -51,15 +51,21 @@ textarea {
 
 .flex-container {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
     justify-content: center;
 }
 
-#leftPanel {
+#upperPanel {
     display: flex;
-    flex-direction: column;
-    padding: 25px;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+#githubArea {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 
 #rightPanel {

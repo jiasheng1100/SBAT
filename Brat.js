@@ -7,20 +7,14 @@ import LocalAjax from "./client/src/local_ajax.js"
 import Visualizer from "./client/src/visualizer.js"
 import VisualizerUI from "./client/src/visualizer_ui.js"
 import AnnotatorUI from "./client/src/annotator_ui.js"
-//import { Util } from "./client/src/util.js"
 
 let dispatcher = new Dispatcher();
 console.log(dispatcher)
-//let util = Util
-//console.log(util)
+
 const LONG_ANNOTATION_CONST = "LongAnnotation";
 
 export class BratFrontendEditor {
     constructor(element, collData = {}, docData = {}, options = {}) {
-        /*
-        if (!(element instanceof Element)) {
-            throw new Error('element should be an instance of Element');
-        }*/
 
         // DEFAULT OPTIONS
         const defaultOptions = {
@@ -190,9 +184,6 @@ export class BratFrontendEditor {
         this.element.innerHTML = html;
         this.setHtmlImgSrc();
 
-        //window.jQuery = $;
-        //(async ($) => {
-        console.log("async")
         window.Configuration = new Configuration();
 
         this.dispatcher = new Dispatcher();
@@ -219,7 +210,6 @@ export class BratFrontendEditor {
         if (this.options.activateEdition) {
             this.visualizerUI = new VisualizerUI(this.dispatcher, this.svg, this.options.showTooltip, this.options.overWriteModals);
             this.annotatorUI = new AnnotatorUI(this.dispatcher, this.svg);
-            // this.spinner = new Spinner(this.dispatcher, '#spinner');
         }
 
         this.dispatcher.post('init');
@@ -232,8 +222,6 @@ export class BratFrontendEditor {
         this.dispatcher.post('collectionLoaded', [this.collData]);
         this.dispatcher.post('requestRenderData', [this.docData]);
         this.dispatcher.post('current', [this.collData, this.docData, {}]);
-        //});
-        //})($);
     }
 
     addLongAnnotationEntityAttribute() {
@@ -264,5 +252,3 @@ export class BratFrontendEditor {
         }
     }
 }
-
-//window.BratFrontendEditor = BratFrontendEditor;

@@ -7,62 +7,42 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>SBAT</title>
     <link rel="stylesheet" href="SBAT.css">
-    <link rel="stylesheet" href="dist/brat-frontend-editor.min.css" />
+    <link rel="stylesheet" href="static/style-ui.css" />
+    <link rel="stylesheet" href="static/style-vis.css" />
+    <link rel="stylesheet" href="static/style.css" />
 </head>
 
 <body>
     <div class="flex-container">
-        <div id="leftPanel">
+        <div id="upperPanel">
             <div id="logoArea">
                 <img src="SBATlogo.png" alt="SBAT logo" id="SBATlogo">
-                <h2>SBAT</h2>
                 <h5>A Simple Browser-based Annotation Tool</h5>
             </div>
-            <div id="downloadArea" class="block">
-                <div>Save annotated file</div>
-                <textarea style="width:150px; height:50px" id="fileNameToSaveAs">Enter file name here...</textarea>
-                <button id="downloadButton" type="button">Download</button>
-            </div>
-            <div id="uploadArea" class="block">
-                <div>Upload new file (.txt / .json)</div>
-                <input type="file" id="fileSelector" accept=".txt, .json" style="text-align:center">
-            </div>
-            <div id="githubArea">
-                <div id="patArea" class="block">
-                    <div>Load file from your Github repo</div>
-                    <div>(Enter your Github Personal Access Token below)</div>
-                    <textarea style="width: 150px; height: 25px;" id="personalAccessToken"></textarea>
-                    <button id="authenticationButton">Okay</button>
-                </div>
-                <div id="commitPatArea" class="block">
-                    <div>Save annotations to your Github Repo</div>
-                    <div>(Enter your Github Personal Access Token below)</div>
-                    <textarea style="width: 150px; height: 25px;" id="commitPersonalAccessToken"></textarea>
-                    <button id="commitAuthenticationButton">Okay</button>
-                </div>
-                <div id="repoSelectArea" class="block">
-                    <div>Select a repository</div>
-                    <select id="repoSelect"></select>
-                    <button id="repoSelectButton">Select</button>
-                </div>
-                <div id="fileSelectArea" class="block">
-                    <div>Select a file</div>
-                    <select id="fileSelect"></select>
-                    <button id="fileSelectButton">Select</button>
-                </div>
-                <div id="fileCreateArea" class="block">
-                    <div>Or enter file name to create a new json file:</div>
-                    <textarea style="width: 150px; height: 20px;" id="commitFileName"></textarea>
-                    <div>Create File</div>
-                </div>
-                <div id="commitMessageArea" class="block">
-                    <div>Enter your commit Message:</div>
-                    <textarea style="width: 150px; height: 50px;" id="commitMessage"></textarea>
-                    <button id="commitConfirmButton">Commit</button>
-                </div>
+            <div id="commitArea" class="block">
+                <button id="commitConfirmButton">Commit Annotations</button>
             </div>
         </div>
-        <div id="brat"></div>
+        <div id="githubArea">
+            <div id="patArea" class="block">
+                <h2>Enter your Personal Access Token</h2>
+                <textarea style="width: 150px; height: 25px;" id="personalAccessToken"></textarea>
+                <button id="authenticationButton">Start</button>
+            </div>
+            <div id="repoSelectArea" class="block">
+                <h2>Select a repository</h2>
+                <select id="repoSelect"></select>
+                <button id="repoSelectButton">Select</button>
+            </div>
+            <div id="fileSelectArea" class="block">
+                <h2>Select a file</h2>
+                <select id="fileSelect"></select>
+                <button id="fileSelectButton">Select</button>
+            </div>
+        </div>
+        <div id="bratArea">
+            <div id="brat"></div>
+        </div>
         <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
         <script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
