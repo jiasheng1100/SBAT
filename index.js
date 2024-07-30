@@ -2,12 +2,12 @@ import { BratFrontendEditor } from "./Brat.js"
 import { Octokit } from "https://esm.sh/octokit@2.1.0";
 
 let patArea = document.getElementById('patArea')
-let repoSelectArea = document.getElementById('repoSelectArea')
+let branchSelectArea = document.getElementById('branchSelectArea')
 let fileSelectArea = document.getElementById('fileSelectArea')
 let personalAccessToken = document.getElementById('personalAccessToken');
 let authenticationButton = document.getElementById('authenticationButton');
-let repoSelect = document.getElementById('repoSelect');
-let repoSelectButton = document.getElementById('repoSelectButton');
+let branchSelect = document.getElementById('branchSelect');
+let branchSelectButton = document.getElementById('branchSelectButton');
 let fileSelect = document.getElementById('fileSelect');
 let fileSelectButton = document.getElementById('fileSelectButton');
 let commitArea = document.getElementById('commitArea')
@@ -17,23 +17,25 @@ let bratArea = document.getElementById('bratArea');
 let pat;
 let octokit;
 let userName;
-let repos;
+let branches;
+let branch;
 let files;
-let repoName;
 let fileName;
 let text;
 let brat;
 let lastCommitSha;
 let lastCommitTreeSha;
+let repoName;
+let repoOwner;
 
 
-repoSelectArea.hidden = true;
+branchSelectArea.hidden = true;
 fileSelectArea.hidden = true;
 commitArea.hidden = true;
 
 
 authenticationButton.addEventListener('click', authenticationButtonClicked);
-repoSelectButton.addEventListener('click', getRepoFiles);
+branchSelectButton.addEventListener('click', getBranchFiles);
 fileSelectButton.addEventListener('click', getFileContent);
 commitConfirmButton.addEventListener('click', commitButtonClicked);
 
@@ -64,6 +66,8 @@ fetch('./config.json')
     .then(
         configData => {
             collData = configData
+            repoName = configData.admin_config.repoName;
+            repoOwner = configData.admin_config.repoOwner;
             if (document.readyState === 'loading') {
                 console.log("loading")
                 // The document is still loading, so add an event listener
@@ -128,10 +132,13 @@ async function authenticationButtonClicked() {
     console.log("authenticationButtonClicked")
     pat = personalAccessToken.value
     octokit = new Octokit({ auth: pat });
+    /*
     getUserName()
         .then(() => getUserRepos())
+        */
+    getRepoBranches()
     patArea.hidden = true;
-    repoSelectArea.hidden = false;
+    branchSelectArea.hidden = false;
     bratArea.hidden = true;
     localStorage.setItem("personalAccessToken", personalAccessToken.value)
     console.log("personal access token saved in local storage")
@@ -141,6 +148,7 @@ async function commitButtonClicked() {
     getLastCommit().then(createNewCommit())
 }
 
+/*
 const getUserName = async () => {
     try {
         const {
@@ -152,31 +160,28 @@ const getUserName = async () => {
         console.error('Error fetching username:', error)
     }
 
-}
+}*/
 
-const getUserRepos = async () => {
+const getRepoBranches = async () => {
     try {
-        const response = await octokit.rest.repos.listForUser({
-            username: userName,
-            type: "owner",
-            sort: "full_name",
-            per_page: 100
-        })
-        repos = await response.data.map(repo => repo.name);
-        makeRepoDropdown()
-        console.log(repos)
+        branches = await octokit.rest.repos.listBranches({
+            owner: repoOwner,
+            repo: repoName
+        }).then(response => response.data.map(branch => branch.name));
+        makeBranchDropdown()
+        console.log(branches)
     } catch (error) {
         console.error('Error fetching repo list:', error)
     }
 }
 
-const makeRepoDropdown = () => {
-    repoSelect.innerHTML = '';
-    repos.forEach(repo => {
+const makeBranchDropdown = () => {
+    branchSelect.innerHTML = '';
+    branches.forEach(branch => {
         const option = document.createElement('option');
-        option.value = repo;
-        option.textContent = repo;
-        repoSelect.appendChild(option);
+        option.value = branch;
+        option.textContent = branch;
+        branchSelect.appendChild(option);
     });
 }
 
@@ -190,17 +195,18 @@ const makeFileDropdown = () => {
     });
 }
 
-async function getRepoFiles() {
+async function getBranchFiles() {
     try {
-        repoName = repoSelect.value;
+        branch = branchSelect.value
         const response = await octokit.rest.repos.getContent({
-            owner: userName,
+            owner: repoOwner,
             repo: repoName,
             path: '',
+            ref: branch
         });
         files = await response.data.map(file => file.path);
-        makeFileDropdown()
-        repoSelectArea.hidden = true;
+        makeFileDropdown();
+        branchSelectArea.hidden = true;
         fileSelectArea.hidden = false;
     } catch (error) {
         console.error('Error fetching file list:', error)
@@ -211,10 +217,12 @@ async function getFileContent() {
     try {
         fileName = fileSelect.value;
         const response = await octokit.rest.repos.getContent({
-            owner: userName,
+            owner: repoOwner,
             repo: repoName,
             path: fileName,
+            ref: branch
         });
+        console.log(response)
         if (response.data.content) {
             text = atob(response.data.content);
             if (extractJSON(text)) {
@@ -244,15 +252,15 @@ const getLastCommit = async () => {
     try {
         // get the SHA of the last commit
         const { data: refData } = await octokit.rest.git.getRef({
-            owner: userName,
+            owner: repoOwner,
             repo: repoName,
-            ref: `heads/main`,
+            ref: `heads/${branch}`,
         })
         lastCommitSha = refData.object.sha
 
         // get the last commit's tree (the datastructure that actually holds the files)
         const { data: commitData } = await octokit.rest.git.getCommit({
-            owner: userName,
+            owner: repoOwner,
             repo: repoName,
             commit_sha: lastCommitSha,
         })
@@ -271,7 +279,7 @@ const createNewCommit = async () => {
         const dataAsJSONString = JSON.stringify(docData, null, "\t")
 
         const { data: treeData } = await octokit.rest.git.createTree({
-            owner: userName,
+            owner: repoOwner,
             repo: repoName,
             base_tree: lastCommitTreeSha,
             tree: [
@@ -287,10 +295,10 @@ const createNewCommit = async () => {
 
         // create new commit and get the SHA of the new commit
         const { data: newCommitData } = await octokit.rest.git.createCommit({
-            owner: userName,
+            owner: repoOwner,
             repo: repoName,
             //message: commitMessage.value,
-            message: "test commit",
+            message: "commit from SBAT",
             tree: newTreeSha,
             parents: [lastCommitSha]
         });
@@ -298,9 +306,9 @@ const createNewCommit = async () => {
 
         // Update the reference to point to the new commit
         await octokit.rest.git.updateRef({
-            owner: userName,
+            owner: repoOwner,
             repo: repoName,
-            ref: `heads/main`,
+            ref: `heads/${branch}`,
             sha: newCommitSha
         });
 
