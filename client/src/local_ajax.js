@@ -115,6 +115,7 @@ class LocalAjax {
     }
 
     editAnnotation(data) {
+        console.log("editAnnotation")
         let e_type = {};
         const attrs = JSON.parse(data.attributes);
         const offsets = JSON.parse(data.offsets);
@@ -185,10 +186,22 @@ class LocalAjax {
     }
 
     deleteAnnotation(data) {
+        console.log("deleteAnnotation")
+        console.log("data", data)
         const entities = data.document.entities;
         for (let i = 0; i < entities.length; i++) {
             if (entities[i][0] === data.id) {
                 entities.splice(i, 1);
+                break;
+            }
+        }
+
+        const events = data.document.events;
+        const triggers = data.document.triggers;
+        for (let i = 0; i < events.length; i++) {
+            if (events[i][0] === data.id) {
+                events.splice(i, 1);
+                triggers.splice(i, 1);
                 break;
             }
         }

@@ -1,4 +1,4 @@
-import { BratFrontendEditor } from "./Brat.js"
+import { BratFrontendEditor } from "./client/src/Brat.js"
 import { Octokit } from "https://esm.sh/octokit@2.1.0";
 
 let patArea = document.getElementById('patArea')
@@ -13,10 +13,11 @@ let fileSelectButton = document.getElementById('fileSelectButton');
 let commitArea = document.getElementById('commitArea')
 let commitConfirmButton = document.getElementById('commitConfirmButton');
 let bratArea = document.getElementById('bratArea');
+let showDocButton = document.getElementById('showDocButton');
+let commitMessage = document.getElementById('commitMessage')
 
 let pat;
 let octokit;
-let userName;
 let branches;
 let branch;
 let files;
@@ -32,6 +33,7 @@ let repoOwner;
 branchSelectArea.hidden = true;
 fileSelectArea.hidden = true;
 commitArea.hidden = true;
+//showDocButton.hidden = true;
 
 
 authenticationButton.addEventListener('click', authenticationButtonClicked);
@@ -39,10 +41,6 @@ branchSelectButton.addEventListener('click', getBranchFiles);
 fileSelectButton.addEventListener('click', getFileContent);
 commitConfirmButton.addEventListener('click', commitButtonClicked);
 
-
-let options = {
-    assetsPath: "static/", webFontURLs: ['fonts/Astloch-Bold.ttf', 'fonts/PT_Sans-Caption-Web-Regular.ttf', 'fonts/Liberation_Sans-Regular.ttf'], ajax: 'local', overWriteModals: false, maxFragmentLength: 30, showTooltip: true
-};
 
 let docData = {
     "messages": [], "source_files": ["txt"], "modifications": [], "normalizations": [], "ctime": 0, "text": "This is an example of how your annotation will look like.\nUpload a txt or json file to start annotating your own text.\nDouble-click or select any span to add your annotation.",
@@ -54,10 +52,9 @@ let docData = {
 let collData;
 
 const initializeBrat = () => {
-    brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData, options);
+    brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData);
     brat.dispatcher.on('sglclick', this, function (data) {
         console.log(data);
-        console.log(brat);
     });
 }
 
@@ -147,20 +144,6 @@ async function authenticationButtonClicked() {
 async function commitButtonClicked() {
     getLastCommit().then(createNewCommit())
 }
-
-/*
-const getUserName = async () => {
-    try {
-        const {
-            data: { login },
-        } = await octokit.rest.users.getAuthenticated();
-        userName = login;
-        console.log("Hello, %s", login);
-    } catch (error) {
-        console.error('Error fetching username:', error)
-    }
-
-}*/
 
 const getRepoBranches = async () => {
     try {
@@ -276,7 +259,17 @@ const getLastCommit = async () => {
 const createNewCommit = async () => {
     try {
         fileName = fileSelect.value;
-        const dataAsJSONString = JSON.stringify(docData, null, "\t")
+        console.log(fileName);
+        /*
+        if (docData.collection !== null) {
+            docData.collection = null;
+        }
+        if (docData.document) {
+            delete docData.document;
+        }
+        console.log(docData)
+        */
+        const dataAsJSONString = JSON.stringify(docData, null, "\t");
 
         const { data: treeData } = await octokit.rest.git.createTree({
             owner: repoOwner,
@@ -298,7 +291,7 @@ const createNewCommit = async () => {
             owner: repoOwner,
             repo: repoName,
             //message: commitMessage.value,
-            message: "commit from SBAT",
+            message: commitMessage.value,
             tree: newTreeSha,
             parents: [lastCommitSha]
         });
@@ -320,6 +313,7 @@ const createNewCommit = async () => {
     }
 }
 
+showDocButton.addEventListener('click', () => console.log(docData));
 
 /* Implementation of uploading and downloading local file:
 
@@ -388,5 +382,19 @@ loadJson(e.target.result);
 }
 });
 reader.readAsText(uploadedFile);
+}
+
+/*
+const getUserName = async () => {
+    try {
+        const {
+            data: { login },
+        } = await octokit.rest.users.getAuthenticated();
+        userName = login;
+        console.log("Hello, %s", login);
+    } catch (error) {
+        console.error('Error fetching username:', error)
+    }
+
 }
 */

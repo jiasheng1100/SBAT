@@ -6,22 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>SBAT</title>
-    <link rel="stylesheet" href="SBAT.css">
-    <link rel="stylesheet" href="static/style-ui.css" />
-    <link rel="stylesheet" href="static/style-vis.css" />
-    <link rel="stylesheet" href="static/style.css" />
+    <link rel="stylesheet" href="static/style/SBAT.css">
+    <link rel="stylesheet" href="static/style/style-ui.css" />
+    <link rel="stylesheet" href="static/style/style-vis.css" />
+    <link rel="stylesheet" href="static/style/style.css" />
 </head>
 
 <body>
     <div class="flex-container">
         <div id="upperPanel">
             <div id="logoArea">
-                <img src="SBATlogo.png" alt="SBAT logo" id="SBATlogo">
+                <img src="static/img/SBATlogo.png" alt="SBAT logo" id="SBATlogo">
                 <h5>A Simple Browser-based Annotation Tool</h5>
             </div>
             <div id="commitArea" class="block">
-                <button id="commitConfirmButton">Commit Annotations</button>
+                <textarea style="width: 150px; height: 50px;" id="commitMessage">Commit from SBAT</textarea>
+                <button id="commitConfirmButton">Commit</button>
             </div>
+            <button id="showDocButton">show Doc</button>
         </div>
         <div id="githubArea">
             <div id="patArea" class="block">

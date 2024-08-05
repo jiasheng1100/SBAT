@@ -239,6 +239,10 @@ input[data-value="multi"] {
     white-space: nowrap;
 }
 
+.dialog {
+    background-color: #87b6d9;
+}
+
 .type_scroller {
     /* TODO remove */
     overflow-y: scroll;
@@ -615,13 +619,4 @@ div.scroll_wrapper_upper div.scroller {
 .ui-combobox input,
 .ui-autocomplete {
     font-size: 11px !important;
-    font-family: 'PT Sans Caption', sans-serif !important;
-}
-
-
-@font-face {
-    font-family: 'Astloch';
-    font-style: normal;
-    font-weight: bold;
-    src: local('Astloch Bold'), local('Astloch-Bold'), url('fonts/Astloch-Bold.ttf') format('truetype');
 }

@@ -64,8 +64,8 @@ var AnnotatorUI = (function ($, window, undefined) {
         var lastNormSearches = [];
 
         that.user = null;
-        var svgElement = $(svg._svg);
-        var svgId = svgElement.parent().attr('id');
+        var svgElement = svg._svg;
+        var svgId = svgElement.parentNode.getAttribute('id');
 
         var args;
         var svgPosition;
@@ -116,7 +116,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                 if (reselectedSpan) {
                     $(reselectedSpan.rect).removeClass('reselect');
                     reselectedSpan = null;
-                    svgElement.removeClass('reselect');
+                    svgElement.classList.remove('reselect');
                 }
                 return;
             }
@@ -239,8 +239,13 @@ var AnnotatorUI = (function ($, window, undefined) {
 
         var startArcDrag = function (originId) {
             clearSelection();
-            svgElement.addClass('unselectable');
-            svgPosition = svgElement.offset();
+            svgElement.classList.add('some-class');;
+            // Get the position of the SVG element relative to the document
+            var rect = svgElement.getBoundingClientRect();
+            svgPosition = {
+                top: rect.top + window.pageYOffset,
+                left: rect.left + window.pageXOffset
+            };
             //console.log("svg position:", svgPosition)
             arcDragOrigin = originId;
             arcDragArc = svg.path(svg.createPath(), {
@@ -336,8 +341,8 @@ var AnnotatorUI = (function ($, window, undefined) {
 
                 // if not, then is it span selection? (ctrl key cancels)
                 var sel = window.getSelection();
-                var chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
-                var chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
+                var chunkIndexFrom = sel.anchorNode && sel.anchorNode.parentNode.getAttribute('data-chunk-id');
+                var chunkIndexTo = sel.focusNode && sel.focusNode.parentNode.getAttribute('data-chunk-id');
                 // fallback for firefox (at least):
                 // it's unclear why, but for firefox the anchor and focus
                 // node parents are always undefined, the the anchor and
@@ -348,12 +353,16 @@ var AnnotatorUI = (function ($, window, undefined) {
                 var anchorOffset = null;
                 var focusOffset = null;
                 if (chunkIndexFrom === undefined && chunkIndexTo === undefined &&
-                    $(sel.anchorNode).attr('data-chunk-id') &&
-                    $(sel.focusNode).attr('data-chunk-id')) {
+                    sel.anchorNode.getAttribute('data-chunk-id') &&
+                    sel.focusNode.getAttribute('data-chunk-id')) {
                     // Lets take the actual selection range and work with that
                     // Note for visual line up and more accurate positions a vertical offset of 8 and horizontal of 2 has been used!
                     var range = sel.getRangeAt(0);
-                    var svgOffset = $(svg._svg).offset();
+                    var rect = svgElement.getBoundingClientRect();
+                    var svgOffset = {
+                        top: rect.top + window.pageYOffset,
+                        left: rect.left + window.pageXOffset
+                    };
                     var flip = false;
                     var tries = 0;
                     // First try and match the start offset with a position, if not try it against the other end
@@ -363,7 +372,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                         sp.y = (flip ? evt.pageY : dragStartedAt.pageY) - (svgOffset.top + 8);
                         var startsAt = range.startContainer;
                         anchorOffset = startsAt.getCharNumAtPosition(sp);
-                        chunkIndexFrom = startsAt && $(startsAt).attr('data-chunk-id');
+                        chunkIndexFrom = startsAt && startsAt.getAttribute('data-chunk-id');
                         if (anchorOffset != -1) {
                             break;
                         }
@@ -388,7 +397,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                         focusOffset = t;
                         flip = false;
                     }
-                    chunkIndexTo = endsAt && $(endsAt).attr('data-chunk-id');
+                    chunkIndexTo = endsAt && endsAt.getAttribute('data-chunk-id');
 
                     // Now take the start and end character rectangles
                     startRec = startsAt.getExtentOfChar(anchorOffset);
@@ -1200,13 +1209,15 @@ var AnnotatorUI = (function ($, window, undefined) {
         };
         normSearchDialog.submit(normSearchSubmit);
         var chooseNormId = function (evt) {
-            var $element = $(evt.target).closest('tr');
-            $('#norm_search_result_select tr').removeClass('selected');
-            $element.addClass('selected');
-            $('#norm_search_query').val($element.attr('data-txt'));
-            $('#norm_search_id').val($element.attr('data-id'));
+            var element = evt.target.closest('tr');
+            document.querySelectorAll('#norm_search_result_select tr').forEach(function (tr) {
+                tr.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            document.getElementById('norm_search_query').value = element.getAttribute('data-txt');
+            document.getElementById('norm_search_id').value = element.getAttribute('data-id');
             setNormSearchSubmit(true);
-        }
+        };
         var chooseNormIdAndSubmit = function (evt) {
             chooseNormId(evt);
             normSearchSubmit(evt);
@@ -1507,7 +1518,7 @@ var AnnotatorUI = (function ($, window, undefined) {
 
         var reselectArc = function (evt) {
             dispatcher.post('hideForm');
-            svgElement.addClass('reselect');
+            svgElement.classList.add('reselect');
             $('g[data-from="' + arcOptions.origin + '"][data-to="' + arcOptions.target + '"]').addClass('reselect');
             startArcDrag(arcOptions.origin);
         };
@@ -1559,9 +1570,9 @@ var AnnotatorUI = (function ($, window, undefined) {
                 if (arcOptions) {
                     $('g[data-from="' + arcOptions.origin + '"][data-to="' + arcOptions.target + '"]').removeClass('reselect');
                 }
-                svgElement.removeClass('reselect');
+                svgElement.classList.remove('reselect');
             }
-            svgElement.removeClass('unselectable');
+            svgElement.classList.remove('unselectable');
             $('.reselectTarget').removeClass('reselectTarget');
         };
 
@@ -1671,8 +1682,6 @@ var AnnotatorUI = (function ($, window, undefined) {
                 }
 
                 if (chunkIndexFrom !== undefined && chunkIndexTo !== undefined) {
-                    console.log("data.chunks:", data.chunks)
-                    console.log("chunkIndexFrom:", chunkIndexFrom)
                     var chunkFrom = data.chunks[chunkIndexFrom];
                     var chunkTo = data.chunks[chunkIndexTo];
                     var selectedFrom = chunkFrom.from + anchorOffset;
@@ -2260,7 +2269,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                     $(reselectedSpan.rect).removeClass('reselect');
                     reselectedSpan = null;
                 }
-                svgElement.removeClass('reselect');
+                svgElement.classList.remove('reselect');
                 $('#waiter').dialog('close');
             } else {
                 if (response.edited == undefined) {
@@ -2268,18 +2277,9 @@ var AnnotatorUI = (function ($, window, undefined) {
                 } else {
                     args.edited = response.edited;
                 }
-                var sourceData = response.annotations;
-                sourceData.document = doc;
-                sourceData.collection = coll;
-                // this "prevent" is to protect against reloading (from the
-                // server) the very data that we just received as part of the
-                // response to the edit.
-                if (response.undo != undefined) {
-                    undoStack.push([coll, sourceData.document, response.undo]);
-                }
                 dispatcher.post('preventReloadByURL');
                 dispatcher.post('setArguments', [args]);
-                dispatcher.post('renderData', [sourceData]);
+                dispatcher.post('requestRenderData', [doc]);
             }
         };
 
@@ -2305,7 +2305,7 @@ var AnnotatorUI = (function ($, window, undefined) {
 
         var reselectSpan = function () {
             dispatcher.post('hideForm');
-            svgElement.addClass('reselect');
+            svgElement.classList.add('reselect');
             $(editedSpan.rect).addClass('reselect');
             reselectedSpan = editedSpan;
             selectedFragment = null;
@@ -2355,7 +2355,7 @@ var AnnotatorUI = (function ($, window, undefined) {
 
         var addFragment = function () {
             dispatcher.post('hideForm');
-            svgElement.addClass('reselect');
+            svgElement.classList.add('reselect');
             $(editedSpan.rect).addClass('reselect');
             reselectedSpan = editedSpan;
             selectedFragment = false;
@@ -2423,7 +2423,7 @@ var AnnotatorUI = (function ($, window, undefined) {
                 if (reselectedSpan) {
                     $(reselectedSpan.rect).removeClass('reselect');
                     reselectedSpan = null;
-                    svgElement.removeClass('reselect');
+                    svgElement.classList.remove('reselect');
                 }
             }
         }]);

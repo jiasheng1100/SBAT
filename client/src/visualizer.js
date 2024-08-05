@@ -222,7 +222,7 @@ var Visualizer = (function ($, window, undefined) {
 
     // render annotations, entities, relationships, and other graphical elements on an SVG canvas.
     // integrates with a dispatcher for handling events and updates.
-    var Visualizer = function (dispatcher, svgId, webFontURLs) {
+    var Visualizer = function (dispatcher, svgId) {
         // uses jQuery to select the SVG container based on svgId. 
         var $svgDiv = $('#' + svgId);
         // If the container is not found, it throws an error.
@@ -3123,44 +3123,7 @@ var Visualizer = (function ($, window, undefined) {
             return !drawing;
         };
 
-        // If we are yet to load our fonts, dispatch them
-        if (!Visualizer.areFontsLoaded) {
-            var webFontConfig = {
-                custom: {
-                    families: [
-                        'Astloch',
-                        'PT Sans Caption',
-                        //        'Ubuntu',
-                        'Liberation Sans'
-                    ],
-                    /* For some cases, in particular for embedding, we need to
-                      allow for fonts being hosted elsewhere */
-                    urls: webFontURLs !== undefined ? webFontURLs : [
-                        'static/fonts/Astloch-Bold.ttf',
-                        'static/fonts/PT_Sans-Caption-Web-Regular.ttf',
-                        //
-                        'static/fonts/Liberation_Sans-Regular.ttf'
-                    ],
-                },
-                active: proceedWithFonts,
-                inactive: proceedWithFonts,
-                fontactive: function (fontFamily, fontDescription) {
-                    // Note: Enable for font debugging
-                    //console.log("font active: ", fontFamily, fontDescription);
-                },
-                fontloading: function (fontFamily, fontDescription) {
-                    // Note: Enable for font debugging
-                    //console.log("font loading:", fontFamily, fontDescription);
-                },
-            };
-            WebFont.load(webFontConfig);
-            setTimeout(function () {
-                if (!Visualizer.areFontsLoaded) {
-                    console.error('Timeout in loading fonts');
-                    proceedWithFonts();
-                }
-            }, fontLoadTimeout);
-        }
+        proceedWithFonts();
 
         dispatcher.
             on('collectionChanged', this, collectionChanged).

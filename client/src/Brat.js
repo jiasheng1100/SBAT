@@ -1,12 +1,12 @@
 //import $ from './client/lib/node-jquery-1.7.1'; //require('jquery-node-browserify'); // @1.7.2 ++
 // <script src="./client/lib/node-jquery-1.7.1"></script>
 
-import Configuration from "./client/src/configuration.js"
-import Dispatcher from "./client/src/dispatcher.js"
-import LocalAjax from "./client/src/local_ajax.js"
-import Visualizer from "./client/src/visualizer.js"
-import VisualizerUI from "./client/src/visualizer_ui.js"
-import AnnotatorUI from "./client/src/annotator_ui.js"
+import Configuration from "./configuration.js"
+import Dispatcher from "./dispatcher.js"
+import LocalAjax from "./local_ajax.js"
+import Visualizer from "./visualizer.js"
+import VisualizerUI from "./visualizer_ui.js"
+import AnnotatorUI from "./annotator_ui.js"
 
 let dispatcher = new Dispatcher();
 console.log(dispatcher)
@@ -25,11 +25,13 @@ export class BratFrontendEditor {
             maxFragmentLength: 40,
             showTooltip: true,
             overWriteModals: false,
+            /*
             webFontURLs: [
                 'fonts/Astloch-Bold.ttf',
                 'fonts/PT_Sans-Caption-Web-Regular.ttf',
                 'fonts/Liberation_Sans-Regular.ttf'
             ],
+            */
             ajax: 'local' // 'local', 'external' or 'normal'
         };
 
@@ -203,8 +205,9 @@ export class BratFrontendEditor {
                 break;
         }
 
-        const absoluteWebFontsURLS = this.options.webFontURLs.map(url => `${this.options.assetsPath}${url}`);
-        this.visualizer = new Visualizer(this.dispatcher, 'svg', absoluteWebFontsURLS);
+        //const absoluteWebFontsURLS = this.options.webFontURLs.map(url => `${this.options.assetsPath}${url}`);
+        //this.visualizer = new Visualizer(this.dispatcher, 'svg', absoluteWebFontsURLS);
+        this.visualizer = new Visualizer(this.dispatcher, 'svg');
         this.svg = this.visualizer.svg;
 
         if (this.options.activateEdition) {

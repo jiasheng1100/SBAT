@@ -921,6 +921,7 @@ var VisualizerUI = (function ($, window, undefined) {
 
         // deleting role rows
         var delSearchEventRole = function (evt) {
+            console.log("delSearchEventRole")
             $row = $(this).closest('tr');
             $row.remove();
         }
