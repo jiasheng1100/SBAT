@@ -24,8 +24,6 @@ let files;
 let fileName;
 let text;
 let brat;
-let lastCommitSha;
-let lastCommitTreeSha;
 let repoName;
 let repoOwner;
 
@@ -33,13 +31,13 @@ let repoOwner;
 branchSelectArea.hidden = true;
 fileSelectArea.hidden = true;
 commitArea.hidden = true;
-//showDocButton.hidden = true;
+showDocButton.hidden = true;
 
 
 authenticationButton.addEventListener('click', authenticationButtonClicked);
 branchSelectButton.addEventListener('click', getBranchFiles);
 fileSelectButton.addEventListener('click', getFileContent);
-commitConfirmButton.addEventListener('click', commitButtonClicked);
+commitConfirmButton.addEventListener('click', pushCommit);
 
 
 let docData = {
@@ -141,10 +139,6 @@ async function authenticationButtonClicked() {
     console.log("personal access token saved in local storage")
 }
 
-async function commitButtonClicked() {
-    getLastCommit().then(createNewCommit())
-}
-
 const getRepoBranches = async () => {
     try {
         branches = await octokit.rest.repos.listBranches({
@@ -231,15 +225,17 @@ const extractJSON = (str) => {
     }
 }
 
-const getLastCommit = async () => {
+async function pushCommit() {
     try {
+        /* retrieve previous commit */
+
         // get the SHA of the last commit
         const { data: refData } = await octokit.rest.git.getRef({
             owner: repoOwner,
             repo: repoName,
             ref: `heads/${branch}`,
         })
-        lastCommitSha = refData.object.sha
+        const lastCommitSha = refData.object.sha
 
         // get the last commit's tree (the datastructure that actually holds the files)
         const { data: commitData } = await octokit.rest.git.getCommit({
@@ -247,50 +243,59 @@ const getLastCommit = async () => {
             repo: repoName,
             commit_sha: lastCommitSha,
         })
-        lastCommitTreeSha = commitData.tree.sha
+        const lastCommitTreeSha = commitData.tree.sha
+
+        // get the tree with all files from the last commit
+        const treeData = await octokit.rest.git.getTree({
+            owner: repoOwner,
+            repo: repoName,
+            tree_sha: lastCommitTreeSha,
+            recursive: "true", // fetch all files recursively
+        }).then(response => response.data.tree)
 
         console.log("last commit retrieval successful")
 
-    } catch (error) {
-        console.error('Error retrieving the last commit:', error);
-    }
-}
+        /* create new commit */
 
-const createNewCommit = async () => {
-    try {
-        fileName = fileSelect.value;
-        console.log(fileName);
-        /*
-        if (docData.collection !== null) {
-            docData.collection = null;
+        // if current file is not json file, create a new json file with same name
+        if (fileName.length > 0) {
+            if (!fileName.includes(".json")) {
+                fileName = fileName.replace(/\..+/i, ".json")
+            }
+        } else {
+            fileName = "newFile.json"
         }
-        if (docData.document) {
-            delete docData.document;
-        }
-        console.log(docData)
-        */
         const dataAsJSONString = JSON.stringify(docData, null, "\t");
 
-        const { data: treeData } = await octokit.rest.git.createTree({
+        // find if the file already exists in the tree
+        const existingFileIndex = treeData.findIndex(item => item.path === fileName);
+
+        // if the file exists, remove it in oder to add updated file
+        if (existingFileIndex >= 0) {
+            treeData.splice(existingFileIndex, 1);
+        }
+
+        // add updated file
+        treeData.push({
+            path: fileName,
+            mode: '100644',
+            type: 'blob',
+            content: dataAsJSONString
+        })
+
+        // create new tree with updated file
+        const { data: newTreeData } = await octokit.rest.git.createTree({
             owner: repoOwner,
             repo: repoName,
             base_tree: lastCommitTreeSha,
-            tree: [
-                {
-                    path: fileName,
-                    mode: '100644',
-                    type: 'blob',
-                    content: dataAsJSONString
-                }
-            ]
+            tree: treeData,
         });
-        const newTreeSha = treeData.sha;
+        const newTreeSha = newTreeData.sha;
 
         // create new commit and get the SHA of the new commit
         const { data: newCommitData } = await octokit.rest.git.createCommit({
             owner: repoOwner,
             repo: repoName,
-            //message: commitMessage.value,
             message: commitMessage.value,
             tree: newTreeSha,
             parents: [lastCommitSha]
@@ -309,7 +314,7 @@ const createNewCommit = async () => {
 
 
     } catch (error) {
-        console.error('Error creating new commit:', error);
+        console.error('Error pushing new commit:', error);
     }
 }
 
