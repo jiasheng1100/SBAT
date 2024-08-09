@@ -214,12 +214,12 @@ input[data-value="multi"] {
     width: 16px;
     margin-top: 3px;
     cursor: hand;
-    background: url('img/expand_icon.gif') no-repeat;
+    background: url('../img/expand_icon.gif') no-repeat;
 }
 
 #span_form .collapser.open,
 #arc_form .collapser.open {
-    background: url('img/collapse_icon.gif') no-repeat;
+    background: url('../img/collapse_icon.gif') no-repeat;
 }
 
 #span_form .collapsible.open,

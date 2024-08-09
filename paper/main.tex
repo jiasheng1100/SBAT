@@ -1,0 +1,145 @@
+\documentclass[a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{natbib}
+
+\usepackage[margin=1.25in]{geometry}
+\usepackage{hyperref} % links
+\usepackage{parskip} % proper paragraphs, no indentation
+\usepackage{pdfpages} % add non-plagiarism statement
+
+% For showing the month + year only as the date:
+\usepackage[en-GB]{datetime2}
+\DTMlangsetup{showdayofmonth=false}
+
+\usepackage{xcolor}
+\usepackage{blindtext} % for adding the "lorem ipsum" filler sections. delete this once you start writing your thesis.
+
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+\usepackage{float}
+
+% This is used in the PDF meta data
+\title{SBAT: A Simple Browser-based Annotation Tool}
+\author{Jia Sheng}
+\date{\today}
+
+\begin{document}
+
+% The actual title page of your thesis:
+\begin{titlepage}
+\begin{center}
+
+\hrule
+\vspace{0.6cm}
+{\bfseries\huge
+SBAT: A Simple Browser-based Annotation Tool
+}\\[1cm] 
+\hrule
+\vspace*{.05\textheight}
+ 
+\begin{minipage}[t]{0.49\textwidth}
+\begin{flushleft} 
+{\large
+\textit{Author}\\
+Jia Sheng}\\
+\href{mailto:jia.sheng@student.uni-tuebingen.de}{\textit{jia.sheng@student.uni-tuebingen.de}}\\
+\end{flushleft}
+\end{minipage}
+\begin{minipage}[t]{0.49\textwidth}
+\begin{flushright}
+{\large
+\textit{Supervisor}\\
+Çagri Çöltekin}\\
+\href{mailto:ccoltekin@sfs.uni-tuebingen.de}{\textit{ccoltekin@sfs.uni-tuebingen.de}}\\
+\end{flushright}
+\end{minipage}\\
+
+\vfill
+
+\vspace*{.1\textheight}
+
+{\large Seminar für Sprachwissenschaft\\
+Eberhard Karls Universität Tübingen
+
+\vspace{1em}
+\today}
+\end{center}
+\end{titlepage}
+
+% No page numbering for the abstract, the anti-plagiarism statement and the table of contents.
+\pagenumbering{gobble}
+
+%% Uncomment once you want to add the anti-plagiarism statement file
+% \newpage
+% \includepdf[pages=-]{name-of-anti-plagiarism-statement-file}
+
+\newpage
+%\tableofcontents
+%\listoftables
+%\listoffigures
+\newpage
+
+\pagenumbering{arabic}
+
+\section{Introduction}
+\begin{enumerate}
+\item Reason to make this tool: \\
+large annotation projects involve many annotators\\
+a centrally managed tool needed\\
+\item limitation of current annotation tool:\\ 
+needs to be hosted on a server\\
+offline version needs installation\\
+\item introduce SBAT, a browser-based tool for text annotation, can be combined well with github
+\end{enumerate}
+\section{Related Work}
+\begin{enumerate}
+\item brat
+\item brat-frontend-editor
+\item sbat old version by Charlotte
+\end{enumerate}
+\section{Features}
+\begin{enumerate}
+\item High-quality Annotation Visualisation and intuitive annotation interface from Brat
+\item web interface, no need to register
+\item import and export annotations through ui from github
+\end{enumerate}
+\section{Implementation}
+\begin{enumerate}
+\item annotation ui from brat
+\item static web app hosted on github pages, no need of server
+\item github API for reading and writing annotation files
+\end{enumerate}
+
+\section{Conclusion}
+SBAT, a light-weight and easy-to-use tool for text annotation projects.\\ 
+Annotation UI based on Brat, but made completely online, and enables user to import from / export to their own github repo.
+
+
+
+%\begin{figure}[H]
+%\centering
+%\includegraphics[scale=0.2]{rag.png}
+%\caption{Retrieval Augmented Generation}
+%Source: https://techcommunity.microsoft.com/t5/azure-ai-services-blog/revolutionize-your-enterprise-data-with-chatgpt-next-gen-apps-w/ba-p/3762087
+%\end{figure}
+
+
+
+%\begin{figure}[H]
+%\centering
+%\includegraphics[scale=0.6]{flow_chart.png}
+%\caption{Flow chart}
+%\end{figure}
+
+%\begin{enumerate}
+%\item 
+%\item 
+%\item 
+%\end{enumerate}
+
+
+%\bibliography{bibliography}
+%\bibliographystyle{chicago}
+
+\end{document}
