@@ -89,6 +89,13 @@ textarea {
     border-radius: 5px
 }
 
+#options_button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 10px;
+}
+
 .block {
     margin: 10px 5px 10px 5px;
 }

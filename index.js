@@ -320,6 +320,40 @@ async function pushCommit() {
 
 showDocButton.addEventListener('click', () => console.log(docData));
 
+/*
+var optionsForm = $('#options_form');
+var optionsFormSubmit = function (evt) {
+    dispatcher.post('hideForm');
+    return false;
+};
+optionsForm.submit(optionsFormSubmit);
+initForm(optionsForm, {
+    width: 550,
+    resizable: false,
+    no_cancel: true,
+    open: function (evt) {
+        keymap = {};
+    }
+});
+$('#options_button').click(function () {
+    dispatcher.post('showForm', [optionsForm]);
+});
+// make nice-looking buttons for checkboxes and radios
+$('#options_form').find('input[type="checkbox"]').button();
+$('#options_form').find('.radio_group').buttonset();
+$('#rapid_model').addClass('ui-widget ui-state-default ui-button-text');
+
+var fillDisambiguatorOptions = function (disambiguators) {
+    $('#annotation_speed3').button(disambiguators.length ? 'enable' : 'disable');
+    //XXX: We need to disable rapid in the conf too if it is not available
+    var $rapid_mode = $('#rapid_model').html('');
+    $.each(disambiguators, function (modelNo, model) {
+        var $option = $('<option/>').attr('value', model[2]).text(model[2]);
+        $rapid_mode.append($option);
+    });
+};
+*/
+
 /* Implementation of uploading and downloading local file:
 
             <div id="downloadArea" class="block">

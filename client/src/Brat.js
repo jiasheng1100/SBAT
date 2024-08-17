@@ -49,6 +49,102 @@ export class BratFrontendEditor {
             <div id="commentpopup"></div>
             <div id="svg"></div>
 
+            <!-- Options dialog -->
+            <form id="options_form" class="dialog" title="Options">
+            <fieldset id="options_form_visual">
+                <legend>Visual options</legend>
+                <div class="optionRow">
+                    <span class="optionLabel">Abbreviate labels</span>
+                    <span id="label_abbreviations" class="radio_group small-buttons">
+                        <input type="radio" id="label_abbreviations_off" value="off" name="label_abbrev_radio" />
+                        <label for="label_abbreviations_off" title="Always display full form of labels.">Off</label>
+                        <input type="radio" id="label_abbreviations_on" value="on" name="label_abbrev_radio"
+                            checked="checked" />
+                        <label for="label_abbreviations_on"
+                            title="Abbreviate annotation labels in limited space.">On</label>
+                    </span>
+                </div>
+                <div class="optionRow">
+                    <span class="optionLabel">Text background</span>
+                    <span id="text_backgrounds" class="radio_group small-buttons">
+                        <input type="radio" id="text_backgrounds_blank" value="blank" name="text_background_radio" />
+                        <label for="text_backgrounds_blank" title="Blank white text backgrounds.">Blank</label>
+                        <input type="radio" id="text_backgrounds_striped" value="striped" name="text_background_radio"
+                            checked="checked" />
+                        <label for="text_backgrounds_striped"
+                            title="Striped text backgrounds with every second sentence on light gray background.">Striped</label>
+                    </span>
+                </div>
+                <div class="optionRow">
+                    <span class="optionLabel">Layout density</span>
+                    <span id="layout_density" class="radio_group small-buttons">
+                        <input type="radio" id="layout_density1" value="1" name="layout_radio" />
+                        <label for="layout_density1"
+                            title="Dense annotation layout: minimizes space taken by annotations.">Dense</label>
+                        <input type="radio" id="layout_density2" value="2" name="layout_radio" checked="checked" />
+                        <label for="layout_density2"
+                            title="Normal annotation layout density: balances between annotation size and readability.">Normal</label>
+                        <input type="radio" id="layout_density3" value="3" name="layout_radio" />
+                        <label for="layout_density3"
+                            title="Spacious annotation layout: allows extra space for annotations to improve readability.">Spacious</label>
+                    </span>
+                </div>
+                <div class="optionRow">
+                    <span class="optionLabel">Visualization width</span>
+                    <input id="svg_width_value" maxlength="3" size="3" value="100" style="text-align:right" />
+                    <span id="svg_width_unit" class="radio_group small-buttons">
+                        <input type="radio" id="svg_width_unit_percent" value="%" name="svg_width_radio"
+                            checked="checked" />
+                        <label for="svg_width_unit_percent">percent</label>
+                        <input type="radio" id="svg_width_unit_pixels" value="px" name="svg_width_radio" />
+                        <label for="svg_width_unit_pixels">pixels</label>
+                    </span>
+                </div>
+                <div class="optionRow small-buttons">
+                    <span class="optionLabel">Paging</span>
+                    size
+                    <input id="paging_size" maxlength="3" size="3" value="10" style="text-align:right" />,
+                    step
+                    <input id="paging_step" maxlength="3" size="3" value="5" style="text-align:right" />
+                    sentences
+                    <input type="button" id="paging_clear" value="Clear" />
+                </div>
+            </fieldset>
+            <fieldset id="options_form_annotation" class="login">
+                <legend>Annotation options</legend>
+                <div class="optionRow">
+                    <span class="optionLabel">Annotation mode</span>
+                    <span id="annotation_speed" class="radio_group small-buttons">
+                        <input type="radio" id="annotation_speed1" value="1" name="annspeed_radio" checked="checked" />
+                        <label for="annotation_speed1"
+                            title="Careful annotation mode: ask for additional confirmation of annotation changes. Suitable for annotators in training and for mature corpora requiring few changes.">Careful</label>
+                        <input type="radio" id="annotation_speed2" value="2" name="annspeed_radio" />
+                        <label for="annotation_speed2"
+                            title="Normal annotation mode. Suitable for standard annotation processes.">Normal</label>
+                        <input type="radio" id="annotation_speed3" value="3" name="annspeed_radio" />
+                        <label for="annotation_speed3"
+                            title="Rapid annotation mode: activate automatic support for speeding up annotation process. Suitable for experienced annotators performing an established task.">Rapid</label>
+                        <select id="rapid_model" />
+                    </span>
+                </div>
+                <div class="optionRow">
+                    <span class="optionLabel">Type Collapse Limit</span>
+                    <input id="type_collapse_limit" maxlength="3" size="3" value="30" style="text-align:right" />
+                </div>
+            </fieldset>
+            <fieldset id="options_form_network">
+                <legend>Network options</legend>
+                <div class="optionRow">
+                    <span class="optionLabel">Collaboration</span>
+                    <span class="small-buttons">
+                        <input id="autorefresh_mode" type="checkbox" />
+                        <label for="autorefresh_mode"
+                            title="Toggle the autorefresh mode on/off. When autorefresh is on, the system will periodically check with the server for updates to the document you are working on. This is useful when collaborating on annotation but consumes some resources, so you may wish to turn autorefresh off if there are no simultaneous edits.">Autorefresh</label>
+                    </span>
+                </div>
+            </fieldset>
+        </form>
+
             <!-- Span dialog (view+edit) -->
             <form id="span_form" class="dialog" title="Span">
                 <!-- Span dialog annotated text -->
@@ -181,7 +277,7 @@ export class BratFrontendEditor {
             <!-- Spinner -->
             <!--<div id="waiter" class="dialog" title="Please wait">
                 <img class="brat-spinner" src="static/img/spinner.gif" />
-            </div>-->
+            </div>-->   
         </div>`;
         this.element.innerHTML = html;
         this.setHtmlImgSrc();

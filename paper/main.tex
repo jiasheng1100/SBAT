@@ -20,7 +20,7 @@
 \usepackage{float}
 
 % This is used in the PDF meta data
-\title{SBAT: A Simple Browser-based Annotation Tool}
+\title{SBAT: A Simple Browser-based Annotation Tool with Interactive UI and Github Support}
 \author{Jia Sheng}
 \date{\today}
 
@@ -32,9 +32,9 @@
 
 \hrule
 \vspace{0.6cm}
-{\bfseries\huge
-SBAT: A Simple Browser-based Annotation Tool
-}\\[1cm] 
+{\bfseries\LARGE
+SBAT: A Simple Browser-based Annotation Tool with Interative UI and Github Support
+}\\[1cm]
 \hrule
 \vspace*{.05\textheight}
  
@@ -83,13 +83,17 @@ Eberhard Karls Universität Tübingen
 \pagenumbering{arabic}
 
 \section{Introduction}
+This paper introduces a SBAT, a light-weighted and easy-to-use web annotation tool. Although there are already various apps developed for the purpose of text annotation, they often required to be hosted on a server, which increases the threshold of usage. In comparison, SBAT is developed to be used in a web UI without need of registration or a dedicated server, while still keeping the necessary functions of the heavier annotation tools.
 \begin{enumerate}
-\item Reason to make this tool: \\
+\item 
+Motivation: \\
+Easy to use for smaller projects, no budget for a server\\
 large annotation projects involve many annotators\\
 a centrally managed tool needed\\
 \item limitation of current annotation tool:\\ 
 needs to be hosted on a server\\
 offline version needs installation\\
+heavy\\
 \item introduce SBAT, a browser-based tool for text annotation, can be combined well with github
 \end{enumerate}
 \section{Related Work}
@@ -97,6 +101,8 @@ offline version needs installation\\
 \item brat
 \item brat-frontend-editor
 \item sbat old version by Charlotte
+\item ud-annotatrix
+\item inception
 \end{enumerate}
 \section{Features}
 \begin{enumerate}
@@ -107,7 +113,7 @@ offline version needs installation\\
 \section{Implementation}
 \begin{enumerate}
 \item annotation ui from brat
-\item static web app hosted on github pages, no need of server
+\item static web app hosted on github pages, no need of server, no server-side configuration, light-weighted
 \item github API for reading and writing annotation files
 \end{enumerate}
 
