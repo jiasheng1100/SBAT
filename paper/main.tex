@@ -20,7 +20,7 @@
 \usepackage{float}
 
 % This is used in the PDF meta data
-\title{SBAT: A Simple Browser-based Annotation Tool with Interactive UI and Github Support}
+\title{SBAT: A Simple Browser-based Annotation Tool with Interactive Visualization and Github Support}
 \author{Jia Sheng}
 \date{\today}
 
@@ -39,7 +39,7 @@ SBAT: A Simple Browser-based Annotation Tool with Interative UI and Github Suppo
 \vspace*{.05\textheight}
  
 \begin{minipage}[t]{0.49\textwidth}
-\begin{flushleft} 
+\begin{flushleft}
 {\large
 \textit{Author}\\
 Jia Sheng}\\
@@ -56,6 +56,12 @@ Jia Sheng}\\
 \end{minipage}\\
 
 \vfill
+
+A thesis submitted in partial fulfilment\\
+of the requirements for the degree of\\[2mm]
+{\large Bachelor of Arts}\\
+in\\[1mm]
+{\large International Studies in Computational Linguistics}
 
 \vspace*{.1\textheight}
 
@@ -75,7 +81,7 @@ Eberhard Karls Universität Tübingen
 % \includepdf[pages=-]{name-of-anti-plagiarism-statement-file}
 
 \newpage
-%\tableofcontents
+\tableofcontents
 %\listoftables
 %\listoffigures
 \newpage
@@ -83,43 +89,50 @@ Eberhard Karls Universität Tübingen
 \pagenumbering{arabic}
 
 \section{Introduction}
-This paper introduces a SBAT, a light-weighted and easy-to-use web annotation tool. Although there are already various apps developed for the purpose of text annotation, they often required to be hosted on a server, which increases the threshold of usage. In comparison, SBAT is developed to be used in a web UI without need of registration or a dedicated server, while still keeping the necessary functions of the heavier annotation tools.
-\begin{enumerate}
-\item 
-Motivation: \\
-Easy to use for smaller projects, no budget for a server\\
-large annotation projects involve many annotators\\
-a centrally managed tool needed\\
-\item limitation of current annotation tool:\\ 
-needs to be hosted on a server\\
-offline version needs installation\\
-heavy\\
-\item introduce SBAT, a browser-based tool for text annotation, can be combined well with github
-\end{enumerate}
+This paper introduces a SBAT, a light-weighted and easy-to-use web annotation tool. It supports text annotation tasks that require attachment of labels, such as POS tagging or labeling for named entity recognition. There have been various apps developed for the purpose of linguistic annotation, but they often require a dedicated server or a local installation, which complicates the usage. Basing on the annotation interface of Brat, SBAT is developed for easier start of text annotation while retaining the most essential functions. It is completely browser-based, without the need of any server, and can be well combined with Github's file management function.
+
+
 \section{Related Work}
+Among the annotation tools, Brat is a powerful scheme-neutral annotation tool with intuitive and user-friendly interfaces. \cite{stenetorp-etal-2012-brat} It can be used for tasks including but not limited to POS tagging, named entity recognition, semantic role labeling, dependancy and verb frame annotations, and enables user-defined contraints-checking. Besides, it provides a high-quality visualization of annotations by its browser-based UI component implemented in XHTML, Scalable Vector Graphics (SVG) and JavaScript. However, a CGI-capable server is required by the installation, which combines all user modifications real-time with the stored data. This is the main difference in brat-frontend-editor, a forked project of the original Brat. \cite{brat-frontend-editor}
 \begin{enumerate}
 \item brat
+There have been various of tools developed for text annotation in linguistics field. Among them, Brat is a scheme-neutral web-based annotation tool with intuitive and user-friendly interfaces and NLP technology. Its vector graphics-based component enables high-quality visualisation, It supports most text annotation tasks including but not limited to POS tagging, named entity recognition, semantic role labeling, dependancy and verb frame annotations, and allows user-defined contraints checking for annotations. Moreover, it integrated a ML-based semantic class disambiguations system that offers multiple outputs with probability estimates, which was proven to increase annotator productivity. It includes a client user interface implemented by XHTML and Scalable Vector Graphics (SVG) and a backend server implemented in Python. Its insllation requires a CGI-capable web server. JavaScript and XML (Ajax) was used for the asynchronous communication between client and server.
 \item brat-frontend-editor
+SBAT frontend UI also refers to "brat-frontend-editor", a forked project of Brat. It is a standalone version of the brat annotator frontend without the need of server-side code, rewriting all client-server communications to pure browser executions.
 \item sbat old version by Charlotte
+This is the previous version of SBAT, with the goal to create an annotation UI based on browser without need of a server. This web page was realized using JavaScript and HTML, and allows annotation of paragraphs, which can be used for, e.g. sentiment analysis.
 \item ud-annotatrix
+A tool designed specifically for annotations of Universal Dependencies. It accepts several input formats including plain text and CoNNL-U, and offers user the Graphical editing function. Unlike Brat, it offers a stand-alone module, which is written in JavaScript with locally saved dependencies and stores imported corpora in localStorage, allowing offline usage. One can also use the server module to save corpora on server.
 \item inception
+INCEpTION is another software designed for specific annotation tasks, in this case for semantic annotation. It is a modular annotation platform that widely adopts machine learning to enable recommenders to provide annotation suggestions as well as active learning mode which learns from the feedback of the user to further improve suggestions quality. It shows the tendancy of more field-specificity and machine-assistance in the development of annotation tools.
+A software for semantic annotation. Recommenders: algorithms that make use of machine learning and/or internal knowledge bases to provide annotation suggestions, to provide users with suggestions for possible labels, active learning mode: solicite feedback from the user, to quickly reach a good quality of annotation suggestions, to guide the annotator. Gives suggestions at any time during the annotation process and learns from user interactions.supports rdf-based knowledge bases for knowledge management.
 \end{enumerate}
 \section{Features}
 \begin{enumerate}
-\item High-quality Annotation Visualisation and intuitive annotation interface from Brat
+\item Interactive Annotation Interface
+The annotation interface of SBAT is completely based on that of BRAT, which is interactive, intuitive and easy-to-use. To add an annotation, one can simply double-click a word or select a span with the mouse, and then select the labels in the pop-up window. The size and display of the interface can be adjusted by the option button, and the labels and their corresponding color can be defined in the JSON config file.
 \item web interface, no need to register
-\item import and export annotations through ui from github
+SBAT is browser-based, which means one can simply open the website and start annotating in the browser. But unlike Brat, all logics of SBAT are completely executed in the browser, so there is no need to configure a server or install any other software.
+\item import and export annotations through ui from github.
+Another advantage of SBAT is its support for github. The user only has to enter his own Github Personal Access Token, and can then import files to annotate from his github repositories and export his annotations by making a commit in the same repository. By making use of github commit, the versions of annotations can be well documented and managed. The annotations are exported to a JSON file with attributes like text, tokens, entites.... For file import, all file types are supported, but only annotations in JSON file with these specific attributes can be visualized in the annotation interface, other file types will be simply treated as txt file, i.e. the complete content will be displayed as pure text which can be annotated.
+\item potential for collaboration in annotation project
+The usage of github repositories to store annotations also enables colloboration and project management. There is a admin config attribute in the JSON config file, which can be modified by the admin to specify the common repository to work on. Then, by sharing the repository to all team members, a team will be able to work on the same annotation project. Different branches can also be created for different members to create and compare multiple versions of annotations.
 \end{enumerate}
 \section{Implementation}
 \begin{enumerate}
 \item annotation ui from brat
+The annotation user interface is made with the frontend UI component from Brat, which is implemented using XHTML, Scalable Vector Graphics (SVG), JavaScript, and jQuery. Moreover, to get rid of the dependancy on a server, all user actions such as creating, editing or deleting annotations are handled by the browser. This is realized by the LocalAjax class, which is written based on the LocalAjax function in brat-frontend-editor and is a local simulation of AJAX requests processing the data without actually sending real network requests. Other UI elements, such as the login buttons, are also implemented using HTML and Asynchronous JavaScript.
 \item static web app hosted on github pages, no need of server, no server-side configuration, light-weighted
+SBAT is a static web app that is hosted on github pages, and as there is no need of a server or any server-side configuration, anyone who have downloaded the repository can simply change the configurations and then host it on their own github pages. If it is not an annotation project which requires collaboration of many members, SBAT can also simply be used locally, by starting the index.js file in the local browser.
 \item github API for reading and writing annotation files
+SBAT uses Octokit, the official SDKs for the Github API.
+octokit.js v4.0.2 [Computer software]. (2024). Retrieved from https://github.com/octokit/octokit.js
+The user authentication through Github Personal Access Token enables creating a new user-authenticated Octokit object and obtaining information about branches and file content from the configured repository.  Likewise, creating a new commit and pushing to github repository is realized by first obtaining tree of all files from last commit, modifying the changed file or creating a new file, and the creating the new tree and commit with the octokit REST API endpoint.
 \end{enumerate}
 
 \section{Conclusion}
-SBAT, a light-weight and easy-to-use tool for text annotation projects.\\ 
-Annotation UI based on Brat, but made completely online, and enables user to import from / export to their own github repo.
+SBAT is an annotation tool that can be used to attach annotation labels to linguistic data. It is completely browser-based and only requires a browser to be executed. Furthermore, it can be combined well with github to import from and export annotations to user's own github repositories. It aims to provide a more simplified and no-server solution for annotation projects.\\ 
+
 
 
 
@@ -145,7 +158,7 @@ Annotation UI based on Brat, but made completely online, and enables user to imp
 %\end{enumerate}
 
 
-%\bibliography{bibliography}
-%\bibliographystyle{chicago}
+\bibliography{bibliography}
+\bibliographystyle{plain}
 
 \end{document}
