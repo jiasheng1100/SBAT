@@ -33,7 +33,7 @@
 \hrule
 \vspace{0.6cm}
 {\bfseries\LARGE
-SBAT: A Simple Browser-based Annotation Tool with Interative UI and Github Support
+SBAT: A Simple Browser-based Annotation Tool with Interative Visualization and Github Support
 }\\[1cm]
 \hrule
 \vspace*{.05\textheight}
@@ -93,20 +93,15 @@ This paper introduces a SBAT, a light-weighted and easy-to-use web annotation to
 
 
 \section{Related Work}
-Among the annotation tools, Brat is a powerful scheme-neutral annotation tool with intuitive and user-friendly interfaces. \cite{stenetorp-etal-2012-brat} It can be used for tasks including but not limited to POS tagging, named entity recognition, semantic role labeling, dependancy and verb frame annotations, and enables user-defined contraints-checking. Besides, it provides a high-quality visualization of annotations by its browser-based UI component implemented in XHTML, Scalable Vector Graphics (SVG) and JavaScript. However, a CGI-capable server is required by the installation, which combines all user modifications real-time with the stored data. This is the main difference in brat-frontend-editor, a forked project of the original Brat. \cite{brat-frontend-editor}
-\begin{enumerate}
-\item brat
-There have been various of tools developed for text annotation in linguistics field. Among them, Brat is a scheme-neutral web-based annotation tool with intuitive and user-friendly interfaces and NLP technology. Its vector graphics-based component enables high-quality visualisation, It supports most text annotation tasks including but not limited to POS tagging, named entity recognition, semantic role labeling, dependancy and verb frame annotations, and allows user-defined contraints checking for annotations. Moreover, it integrated a ML-based semantic class disambiguations system that offers multiple outputs with probability estimates, which was proven to increase annotator productivity. It includes a client user interface implemented by XHTML and Scalable Vector Graphics (SVG) and a backend server implemented in Python. Its insllation requires a CGI-capable web server. JavaScript and XML (Ajax) was used for the asynchronous communication between client and server.
-\item brat-frontend-editor
-SBAT frontend UI also refers to "brat-frontend-editor", a forked project of Brat. It is a standalone version of the brat annotator frontend without the need of server-side code, rewriting all client-server communications to pure browser executions.
-\item sbat old version by Charlotte
-This is the previous version of SBAT, with the goal to create an annotation UI based on browser without need of a server. This web page was realized using JavaScript and HTML, and allows annotation of paragraphs, which can be used for, e.g. sentiment analysis.
-\item ud-annotatrix
-A tool designed specifically for annotations of Universal Dependencies. It accepts several input formats including plain text and CoNNL-U, and offers user the Graphical editing function. Unlike Brat, it offers a stand-alone module, which is written in JavaScript with locally saved dependencies and stores imported corpora in localStorage, allowing offline usage. One can also use the server module to save corpora on server.
-\item inception
-INCEpTION is another software designed for specific annotation tasks, in this case for semantic annotation. It is a modular annotation platform that widely adopts machine learning to enable recommenders to provide annotation suggestions as well as active learning mode which learns from the feedback of the user to further improve suggestions quality. It shows the tendancy of more field-specificity and machine-assistance in the development of annotation tools.
-A software for semantic annotation. Recommenders: algorithms that make use of machine learning and/or internal knowledge bases to provide annotation suggestions, to provide users with suggestions for possible labels, active learning mode: solicite feedback from the user, to quickly reach a good quality of annotation suggestions, to guide the annotator. Gives suggestions at any time during the annotation process and learns from user interactions.supports rdf-based knowledge bases for knowledge management.
-\end{enumerate}
+Among the annotation tools, Brat \cite{stenetorp-etal-2012-brat} is a powerful scheme-neutral annotation tool with intuitive and user-friendly interfaces. And it is extremely important for this paper as SBAT is developed upon its UI component. Brat can be used for tasks including but not limited to POS tagging, named entity recognition, semantic role labeling, dependancy and verb frame annotations, and enables user-defined contraints-checking. Besides, it provides a high-quality visualization of annotations by its browser-based UI component implemented in XHTML, Scalable Vector Graphics (SVG) and JavaScript. Last but not the least, Brat integrats a ML-based semantic class disambiguator that outputs multiple annotations with their posibility estimates, which was proven to increase the efficiency of annotators.\\
+\\
+Although Brat is a very capable annotation tool, it is not necessarily the simpliest to use. A CGI-capable server is required by its installation, which will combine all user modifications real-time with the stored data. That is where brat-frontend-editor, a forked project of Brat, differentiates itself with the original project. Brat-frontend-editor \cite{brat-frontend-editor} is a standalone browser version of Brat that do not require a server. This project is since 2018 no longer maintained, however, its transformation of server-side operations into browser-only operations serves as important reference in the development of SBAT.\\
+\\
+While Brat serves as a general-purpose annotation tool, more recent tools target at more specific annotation schemes. UD Annotatrix \cite{tyers-etal-2017-ud}, for example, is specifically designed for annotations of universal dependencies. It accepts several input formats including plain text and CoNNL-U, and offers user Graphical editing function. Unlike Brat, it offers a stand-alone module, which is written in JavaScript with locally saved dependencies and stores imported corpora in localStorage, allowing offline usage. But there is also a server module to save corpora on server.\\
+\\
+Another specific-purpose annotation tool is INCEpTION \cite{klie-etal-2018-inception}, which is used for semantic annotation. What differentiates it from the previously-introduced tools is its wide adoption of machine learning models to assist annotation process. It not only utilizes recommenders based on machine learning models to provide users with suggestions for possible labels, but also has an active learning mode where user's feedback can be used to further improve the quality of those suggestions. It also has a comprehensive user management system, where admin can create multiple user accounts for the project and assign them different roles. In terms of the software itself, INCEpTION is a Java application with Spring Boot backend and a web user interface, so its usage requires installation of Java as well as the software.\\
+\\
+Lastly, the initial version of SBAT \cite{SBAT} serves as one of the basis of the current SBAT version. The development of this previous version has the same goal, which is to achieve a simple but functional annotation tool that is completely browser-based, without any server-side configuration. It is implemented using HTML and JavaScript, and can be used to define and attach labels to paragraphs, as well as import and export annotation files.
 \section{Features}
 \begin{enumerate}
 \item Interactive Annotation Interface
