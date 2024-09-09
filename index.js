@@ -14,7 +14,9 @@ let commitArea = document.getElementById('commitArea')
 let commitConfirmButton = document.getElementById('commitConfirmButton');
 let bratArea = document.getElementById('bratArea');
 let showDocButton = document.getElementById('showDocButton');
-let commitMessage = document.getElementById('commitMessage')
+let commitMessage = document.getElementById('commitMessage');
+let filePathArea = document.getElementById('filePathArea');
+let filePathInfo = document.getElementById('filePathInfo')
 
 let pat;
 let octokit;
@@ -32,6 +34,7 @@ branchSelectArea.hidden = true;
 fileSelectArea.hidden = true;
 commitArea.hidden = true;
 showDocButton.hidden = true;
+filePathArea.hidden = true;
 
 
 authenticationButton.addEventListener('click', authenticationButtonClicked);
@@ -63,6 +66,12 @@ fetch('./config.json')
             collData = configData
             repoName = configData.admin_config.repoName;
             repoOwner = configData.admin_config.repoOwner;
+            if (configData.admin_config.filePath) {
+                fileName = configData.admin_config.filePath;
+            }
+            if (configData.admin_config.branch) {
+                branch = configData.admin_config.branch;
+            }
             if (document.readyState === 'loading') {
                 console.log("loading")
                 // The document is still loading, so add an event listener
@@ -72,13 +81,16 @@ fetch('./config.json')
                 initializeBrat()
             }
         })
+    .then(() => {
+        if (localStorage.getItem("personalAccessToken") != null) {
+            personalAccessToken.value = localStorage.getItem("personalAccessToken")
+            patArea.hidden = true;
+            authenticationButtonClicked();
+            console.log("personal access token found in local storage")
+        }
+    })
     .catch((err) => console.error(`error fetching config.json: ${err}`))
 
-
-if (localStorage.getItem("personalAccessToken") != null) {
-    personalAccessToken.value = localStorage.getItem("personalAccessToken")
-    console.log("personal access token found in local storage")
-}
 
 function loadTxt(textData) {
     console.log("loadTxt")
@@ -116,30 +128,12 @@ function loadJson(data) {
 
 function updateBratEditor() {
     if (brat) {
-        //brat.dispatcher.post('collectionLoaded', [collData]);
         brat.dispatcher.post('requestRenderData', [docData]);
         brat.dispatcher.post('current', [collData, docData, {}]);
     }
 }
 
-
-async function authenticationButtonClicked() {
-    console.log("authenticationButtonClicked")
-    pat = personalAccessToken.value
-    octokit = new Octokit({ auth: pat });
-    /*
-    getUserName()
-        .then(() => getUserRepos())
-        */
-    getRepoBranches()
-    patArea.hidden = true;
-    branchSelectArea.hidden = false;
-    bratArea.hidden = true;
-    localStorage.setItem("personalAccessToken", personalAccessToken.value)
-    console.log("personal access token saved in local storage")
-}
-
-const getRepoBranches = async () => {
+async function getRepoBranches() {
     try {
         branches = await octokit.rest.repos.listBranches({
             owner: repoOwner,
@@ -172,6 +166,26 @@ const makeFileDropdown = () => {
     });
 }
 
+async function authenticationButtonClicked() {
+    console.log("authenticationButtonClicked")
+    pat = personalAccessToken.value
+    octokit = new Octokit({ auth: pat });
+    if (!branch) {
+        getRepoBranches();
+        branchSelectArea.hidden = false;
+        bratArea.hidden = true;
+    } else if (!fileName) {
+        getBranchFiles();
+        bratArea.hidden = true;
+    }
+    else {
+        getFileContent();
+    }
+    patArea.hidden = true;
+    localStorage.setItem("personalAccessToken", personalAccessToken.value)
+    console.log("personal access token saved in local storage")
+}
+
 async function getBranchFiles() {
     try {
         branch = branchSelect.value
@@ -192,7 +206,9 @@ async function getBranchFiles() {
 
 async function getFileContent() {
     try {
-        fileName = fileSelect.value;
+        if (!fileName) {
+            fileName = fileSelect.value;
+        }
         const response = await octokit.rest.repos.getContent({
             owner: repoOwner,
             repo: repoName,
@@ -214,6 +230,8 @@ async function getFileContent() {
         console.error('Error fetching file content:', error)
     }
     commitArea.hidden = false;
+    filePathArea.hidden = false;
+    filePathInfo.value = repoName + "/" + fileName + `\nbranch ${branch}`
 }
 
 const extractJSON = (str) => {
