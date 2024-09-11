@@ -1,6 +1,7 @@
 import { BratFrontendEditor } from "./client/src/Brat.js"
 import { Octokit } from "https://esm.sh/octokit@2.1.0";
 
+// get DOM elements
 let patArea = document.getElementById('patArea')
 let branchSelectArea = document.getElementById('branchSelectArea')
 let fileSelectArea = document.getElementById('fileSelectArea')
@@ -18,6 +19,7 @@ let commitMessage = document.getElementById('commitMessage');
 let filePathArea = document.getElementById('filePathArea');
 let filePathInfo = document.getElementById('filePathInfo')
 
+// initialize variables
 let pat;
 let octokit;
 let branches;
@@ -28,21 +30,8 @@ let text;
 let brat;
 let repoName;
 let repoOwner;
-
-
-branchSelectArea.hidden = true;
-fileSelectArea.hidden = true;
-commitArea.hidden = true;
-showDocButton.hidden = true;
-filePathArea.hidden = true;
-
-
-authenticationButton.addEventListener('click', authenticationButtonClicked);
-branchSelectButton.addEventListener('click', getBranchFiles);
-fileSelectButton.addEventListener('click', getFileContent);
-commitConfirmButton.addEventListener('click', pushCommit);
-
-
+let collData;
+// annotated text shown in the start page
 let docData = {
     "messages": [], "source_files": ["txt"], "modifications": [], "normalizations": [], "ctime": 0, "text": "This is an example of how your annotation will look like.\nUpload a txt or json file to start annotating your own text.\nDouble-click or select any span to add your annotation.",
     "entities": [["N1", "Object", [[11, 18]]], ["N2", "Child", [[67, 70]]], ["N3", "Baby", [[74, 78]]]], "attributes": [], "relations": [], "triggers": [["T1", "Assassination", [[119, 131]]], ["T2", "Bomb", [[135, 141]]]], "events": [["E1", "T1", []], ["E2", "T2", []]], "comments": [],
@@ -50,22 +39,30 @@ let docData = {
     [87, 92], [93, 103], [104, 108], [109, 112], [113, 118], [119, 131], [132, 134], [135, 141], [142, 145], [146, 150], [151, 153], [154, 157], [158, 162], [163, 174]]
 }
 
-let collData;
+// hide unwanted areas in the beginning
+branchSelectArea.hidden = true;
+fileSelectArea.hidden = true;
+commitArea.hidden = true;
+showDocButton.hidden = true;
+filePathArea.hidden = true;
 
-const initializeBrat = () => {
-    brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData);
-    brat.dispatcher.on('sglclick', this, function (data) {
-        console.log(data);
-    });
-}
+// attach event listener to buttons
+authenticationButton.addEventListener('click', authenticationButtonClicked);
+branchSelectButton.addEventListener('click', getBranchFiles);
+fileSelectButton.addEventListener('click', getFileContent);
+commitConfirmButton.addEventListener('click', pushCommit);
 
+// fetch config file before starting annotation editor
 fetch('./config.json')
     .then(response => response.json())
     .then(
+        // assign values from config file to variables
         configData => {
             collData = configData
             repoName = configData.admin_config.repoName;
             repoOwner = configData.admin_config.repoOwner;
+            /* filePath and branch are optional, if not defined in config file,
+            the user will be prompted to select them in the user interface */
             if (configData.admin_config.filePath) {
                 fileName = configData.admin_config.filePath;
             }
@@ -89,8 +86,15 @@ fetch('./config.json')
             console.log("personal access token found in local storage")
         }
     })
-    .catch((err) => console.error(`error fetching config.json: ${err}`))
+    .catch((err) => console.error(`error initializing annotation editor: ${err}`))
 
+// function to start annotation editor
+function initializeBrat() {
+    brat = new BratFrontendEditor(document.getElementById("brat"), collData, docData);
+    brat.dispatcher.on('sglclick', this, function (data) {
+        console.log(data);
+    });
+}
 
 function loadTxt(textData) {
     console.log("loadTxt")
@@ -186,7 +190,14 @@ async function authenticationButtonClicked() {
     console.log("personal access token saved in local storage")
 }
 
+/* 
+retrieve name of files from the specified branch
+and make a drop down list with them
+*/
 async function getBranchFiles() {
+    /* if file path is already specified in the config file, skil this step
+    and directly get file content */
+    if (fileName) { getFileContent() };
     try {
         branch = branchSelect.value
         const response = await octokit.rest.repos.getContent({
@@ -337,40 +348,6 @@ async function pushCommit() {
 }
 
 showDocButton.addEventListener('click', () => console.log(docData));
-
-/*
-var optionsForm = $('#options_form');
-var optionsFormSubmit = function (evt) {
-    dispatcher.post('hideForm');
-    return false;
-};
-optionsForm.submit(optionsFormSubmit);
-initForm(optionsForm, {
-    width: 550,
-    resizable: false,
-    no_cancel: true,
-    open: function (evt) {
-        keymap = {};
-    }
-});
-$('#options_button').click(function () {
-    dispatcher.post('showForm', [optionsForm]);
-});
-// make nice-looking buttons for checkboxes and radios
-$('#options_form').find('input[type="checkbox"]').button();
-$('#options_form').find('.radio_group').buttonset();
-$('#rapid_model').addClass('ui-widget ui-state-default ui-button-text');
-
-var fillDisambiguatorOptions = function (disambiguators) {
-    $('#annotation_speed3').button(disambiguators.length ? 'enable' : 'disable');
-    //XXX: We need to disable rapid in the conf too if it is not available
-    var $rapid_mode = $('#rapid_model').html('');
-    $.each(disambiguators, function (modelNo, model) {
-        var $option = $('<option/>').attr('value', model[2]).text(model[2]);
-        $rapid_mode.append($option);
-    });
-};
-*/
 
 /* Implementation of uploading and downloading local file:
 
