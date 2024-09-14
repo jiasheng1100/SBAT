@@ -86,7 +86,7 @@ fetch('./config.json')
             console.log("personal access token found in local storage")
         }
     })
-    .catch((err) => console.error(`error initializing annotation editor: ${err}`))
+    .catch((err) => window.alert(`error initializing annotation editor: ${err}`))
 
 // function to start annotation editor
 function initializeBrat() {
@@ -96,6 +96,7 @@ function initializeBrat() {
     });
 }
 
+// function to update content in editor with a txt file
 function loadTxt(textData) {
     console.log("loadTxt")
     docData = {
@@ -116,6 +117,7 @@ function loadTxt(textData) {
     updateBratEditor()
 }
 
+// function to update content in editor with a json file
 function loadJson(data) {
     console.log("loadJson")
     let parsedJson = JSON.parse(data);
@@ -146,7 +148,12 @@ async function getRepoBranches() {
         makeBranchDropdown()
         console.log(branches)
     } catch (error) {
-        console.error('Error fetching repo list:', error)
+        window.alert(`Error fetching branches from the repository, please check if the following information is correct:\n
+            repository owner: ${repoOwner}\n
+            repository name: ${repoName}\n
+            error message: ${error}\n
+            Hint: if all information is correct, it could be that you do not have permission to access the repository
+            `)
     }
 }
 
@@ -191,7 +198,7 @@ async function authenticationButtonClicked() {
 }
 
 /* 
-retrieve name of files from the specified branch
+retrieve name of files from the user-specified branch
 and make a drop down list with them
 */
 async function getBranchFiles() {
@@ -211,7 +218,14 @@ async function getBranchFiles() {
         branchSelectArea.hidden = true;
         fileSelectArea.hidden = false;
     } catch (error) {
-        console.error('Error fetching file list:', error)
+        window.alert(`Error fetching files from the branch, please check if the following information is correct:\n
+            repository owner: ${repoOwner}\n
+            repository name: ${repoName}\n
+            file path: /\n
+            branch: ${branch}\n
+            error message: ${error}\n
+            Hint: if all information is correct, it could be that you do not have permission to access the branch
+            `)
     }
 }
 
@@ -238,7 +252,14 @@ async function getFileContent() {
         fileSelectArea.hidden = true;
         bratArea.hidden = false;
     } catch (error) {
-        console.error('Error fetching file content:', error)
+        window.alert(`Error fetching file content, please check if the following information is correct:\n
+            repository owner: ${repoOwner}\n
+            repository name: ${repoName}\n
+            file path: ${fileName}\n
+            branch: ${branch}\n
+            error message: ${error}\n
+            Hint: if all information is correct, it could be that the file does not exist anymore or you do not have permission to access the file
+            `)
     }
     commitArea.hidden = false;
     filePathArea.hidden = false;
@@ -343,7 +364,7 @@ async function pushCommit() {
 
 
     } catch (error) {
-        console.error('Error pushing new commit:', error);
+        window.alert('Error pushing new commit:', error);
     }
 }
 
@@ -427,7 +448,7 @@ const getUserName = async () => {
         userName = login;
         console.log("Hello, %s", login);
     } catch (error) {
-        console.error('Error fetching username:', error)
+        window.alert('Error fetching username:', error)
     }
 
 }
