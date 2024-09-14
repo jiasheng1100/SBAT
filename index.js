@@ -69,15 +69,18 @@ fetch('./config.json')
             if (configData.admin_config.branch) {
                 branch = configData.admin_config.branch;
             }
+            /* if the document is still loading, only initialize Brat after loaded,
+            otherwise, initialize Brat straight away */
             if (document.readyState === 'loading') {
                 console.log("loading")
-                // The document is still loading, so add an event listener
                 document.addEventListener('DOMContentLoaded', initializeBrat)
             } else {
                 console.log("loaded")
                 initializeBrat()
             }
         })
+    /* if there is already personal access token saved in localStorage, skip the
+    prompting and authenticate the user with the saved pat right away */
     .then(() => {
         if (localStorage.getItem("personalAccessToken") != null) {
             personalAccessToken.value = localStorage.getItem("personalAccessToken")
@@ -96,7 +99,7 @@ function initializeBrat() {
     });
 }
 
-// function to update content in editor with a txt file
+// update content in Brat editor with a txt file
 function loadTxt(textData) {
     console.log("loadTxt")
     docData = {
@@ -117,7 +120,7 @@ function loadTxt(textData) {
     updateBratEditor()
 }
 
-// function to update content in editor with a json file
+// update Brat content in editor with a json file
 function loadJson(data) {
     console.log("loadJson")
     let parsedJson = JSON.parse(data);
@@ -132,6 +135,7 @@ function loadJson(data) {
 
 }
 
+// use the dispatcher to update the content to display in Brat editor
 function updateBratEditor() {
     if (brat) {
         brat.dispatcher.post('requestRenderData', [docData]);
@@ -139,6 +143,8 @@ function updateBratEditor() {
     }
 }
 
+/* retrieve all existing branches of the given repository
+and make a drop down list with them */
 async function getRepoBranches() {
     try {
         branches = await octokit.rest.repos.listBranches({
@@ -157,6 +163,7 @@ async function getRepoBranches() {
     }
 }
 
+// make a drop down list with all branch options
 const makeBranchDropdown = () => {
     branchSelect.innerHTML = '';
     branches.forEach(branch => {
@@ -167,6 +174,7 @@ const makeBranchDropdown = () => {
     });
 }
 
+// make a drop down list with all file options
 const makeFileDropdown = () => {
     fileSelect.innerHTML = '';
     files.forEach(file => {
@@ -177,24 +185,38 @@ const makeFileDropdown = () => {
     });
 }
 
+// click handler for authentication button
 async function authenticationButtonClicked() {
-    console.log("authenticationButtonClicked")
-    pat = personalAccessToken.value
-    octokit = new Octokit({ auth: pat });
-    if (!branch) {
-        getRepoBranches();
-        branchSelectArea.hidden = false;
-        bratArea.hidden = true;
-    } else if (!fileName) {
-        getBranchFiles();
-        bratArea.hidden = true;
+    console.log("authenticationButtonClicked");
+    try {
+        // try to authenticate the user with the given personal access token
+        pat = personalAccessToken.value;
+        octokit = new Octokit({ auth: pat });
+        patArea.hidden = true;
+        localStorage.setItem("personalAccessToken", personalAccessToken.value);
+        console.log("personal access token saved in local storage");
+        // if no branch name is given in the config file, allow the user to select it
+        if (!branch) {
+            getRepoBranches();
+            branchSelectArea.hidden = false;
+            bratArea.hidden = true;
+            // if no file name is given in the config file, allow the user to select it
+        } else if (!fileName) {
+            getBranchFiles();
+            bratArea.hidden = true;
+        }
+        // if both branch and file names are given, display file content in the editor
+        else {
+            getFileContent();
+        }
+    } catch (error) {
+        patArea.hidden = false;
+        window.alert(`Error authenticating user, please try again with a different token\n
+        Error message: ${error}`);
     }
-    else {
-        getFileContent();
-    }
-    patArea.hidden = true;
-    localStorage.setItem("personalAccessToken", personalAccessToken.value)
-    console.log("personal access token saved in local storage")
+
+
+
 }
 
 /* 
@@ -202,7 +224,7 @@ retrieve name of files from the user-specified branch
 and make a drop down list with them
 */
 async function getBranchFiles() {
-    /* if file path is already specified in the config file, skil this step
+    /* if file path is already specified in the config file, skip this step
     and directly get file content */
     if (fileName) { getFileContent() };
     try {
@@ -229,6 +251,7 @@ async function getBranchFiles() {
     }
 }
 
+// retrieve file content and display it in the editor
 async function getFileContent() {
     try {
         if (!fileName) {
@@ -266,6 +289,7 @@ async function getFileContent() {
     filePathInfo.value = repoName + "/" + fileName + `\nbranch ${branch}`
 }
 
+// function to check if a string is in json format
 const extractJSON = (str) => {
     try {
         JSON.parse(str);
@@ -275,6 +299,7 @@ const extractJSON = (str) => {
     }
 }
 
+// commit the annotations and push to repository
 async function pushCommit() {
     try {
         /* retrieve previous commit */
