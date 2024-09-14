@@ -1,0 +1,478 @@
+{
+    "admin_config": {
+        "repoName": "test-github-commit",
+        "repoOwner": "jiasheng1100",
+        "filePath": "instructions.txt",
+        "branch": "main"
+    },
+    "messages": [],
+    "items": [],
+    "ui_names": {
+        "entities": "annotation",
+        "events": "events",
+        "relations": "relations",
+        "attributes": "attributes"
+    },
+    "search_config": [
+        [
+            "Google",
+            "http://www.google.com/search?q=%s"
+        ],
+        [
+            "Wikipedia",
+            "http://en.wikipedia.org/wiki/Special:Search?search=%s"
+        ],
+        [
+            "UniProt",
+            "http://www.uniprot.org/uniprot/?sort=score&query=%s"
+        ],
+        [
+            "EntrezGene",
+            "http://www.ncbi.nlm.nih.gov/gene?term=%s"
+        ],
+        [
+            "GeneOntology",
+            "http://amigo.geneontology.org/cgi-bin/amigo/search.cgi?search_query=%s&action=new-search&search_constraint=term"
+        ],
+        [
+            "ALC",
+            "http://eow.alc.co.jp/%s"
+        ]
+    ],
+    "disambiguator_config": [],
+    "unconfigured_types": [
+        {
+            "borderColor": "darken",
+            "arrowHead": "triangle,5",
+            "name": "Cause",
+            "color": "#007700",
+            "labels": [
+                "Cause"
+            ],
+            "unused": true,
+            "bgColor": "lightgreen",
+            "type": "Cause",
+            "fgColor": "black"
+        }
+    ],
+    "entity_types": [
+        {
+            "name": "Person",
+            "type": "Person",
+            "labels": [
+                "Per",
+                "P"
+            ],
+            "bgColor": "#FE2E2E",
+            "borderColor": "darken",
+            "unused": false,
+            "attributes": [
+                "Notorious",
+                "Polarity"
+            ],
+            "arcs": [
+                {
+                    "arrowHead": "triangle,5",
+                    "color": "black",
+                    "labels": [
+                        "Ennemy",
+                        "Enn"
+                    ],
+                    "dashArray": ",",
+                    "hotkey": "T",
+                    "type": "Ennemy",
+                    "targets": [
+                        "Person"
+                    ]
+                },
+                {
+                    "arrowHead": "triangle,5",
+                    "color": "black",
+                    "labels": [
+                        "Friend",
+                        "Fr"
+                    ],
+                    "dashArray": ",",
+                    "hotkey": "T",
+                    "type": "Friend",
+                    "targets": [
+                        "Person"
+                    ]
+                },
+                {
+                    "arrowHead": "triangle,5",
+                    "color": "black",
+                    "labels": [
+                        "Destruction",
+                        "Dest"
+                    ],
+                    "dashArray": ",",
+                    "hotkey": "T",
+                    "type": "Destruction",
+                    "targets": [
+                        "Object",
+                        "Person"
+                    ]
+                }
+            ],
+            "children": [
+                {
+                    "name": "Child",
+                    "type": "Child",
+                    "labels": [
+                        "Child",
+                        "Child"
+                    ],
+                    "bgColor": "#FE2E2E",
+                    "borderColor": "darken",
+                    "children": [
+                        {
+                            "name": "Baby",
+                            "type": "Baby",
+                            "labels": [
+                                "Baby",
+                                "Baby"
+                            ],
+                            "bgColor": "#DF7401",
+                            "borderColor": "darken",
+                            "children": []
+                        },
+                        {
+                            "name": "Kid",
+                            "type": "Kid",
+                            "labels": [
+                                "Kid",
+                                "Kid"
+                            ],
+                            "bgColor": "#FE2E2E",
+                            "borderColor": "darken",
+                            "children": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Object",
+            "type": "Object",
+            "labels": [
+                "Object",
+                "Obj"
+            ],
+            "bgColor": "#7fa2ff",
+            "borderColor": "darken",
+            "attributes": [],
+            "children": [],
+            "unused": false,
+            "arcs": [
+                {
+                    "arrowHead": "triangle,5",
+                    "color": "black",
+                    "labels": [
+                        "Destruction",
+                        "Dest"
+                    ],
+                    "dashArray": ",",
+                    "hotkey": "T",
+                    "type": "Destruction",
+                    "targets": [
+                        "Object",
+                        "Person"
+                    ]
+                }
+            ]
+        }
+    ],
+    "event_attribute_types": [
+        {
+            "labels": null,
+            "type": "Confidence",
+            "name": "Confidence",
+            "unused": false,
+            "values": {
+                "Certain": {
+                    "dashArray": ","
+                },
+                "Likely": {
+                    "dashArray": "3,3"
+                },
+                "Possible": {
+                    "dashArray": "3,6"
+                }
+            }
+        },
+        {
+            "labels": null,
+            "type": "BombType",
+            "name": "BombType",
+            "unused": false,
+            "values": {
+                "Nuclear bomb": {},
+                "Neutron bomb": {},
+                "Napalm bomb": {},
+                "Hydrogen bomb": {}
+            }
+        },
+        {
+            "name": "Epic",
+            "type": "Epic",
+            "values": {
+                "Epic": {
+                    "glyph": "★★★"
+                }
+            }
+        }
+    ],
+    "entity_attribute_types": [
+        {
+            "name": "Notorious",
+            "type": "Notorious",
+            "values": {
+                "Notorious": {
+                    "glyph": "★"
+                }
+            }
+        },
+        {
+            "type": "Polarity",
+            "name": "Polarity",
+            "values": {
+                "Positive": {
+                    "box": "none",
+                    "glyph": "\n[Polarity:true]",
+                    "dashArray": "1,2"
+                },
+                "Negative": {
+                    "box": "crossed",
+                    "glyph": "\n[Polarity:false]",
+                    "dashArray": "3,4"
+                }
+            }
+        }
+    ],
+    "relation_attribute_types": [
+        {
+            "labels": null,
+            "type": "RelConfidence",
+            "name": "Relation Confidence",
+            "unused": false,
+            "values": {
+                "Certain": {
+                    "dashArray": ","
+                },
+                "Likely": {
+                    "dashArray": "3,3"
+                },
+                "Possible": {
+                    "dashArray": "3,6"
+                }
+            }
+        },
+        {
+            "name": "Safe",
+            "type": "Safe",
+            "values": {
+                "Safe": {}
+            }
+        }
+    ],
+    "relation_types": [
+        {
+            "type": "Destruction",
+            "labels": [
+                "Destruction",
+                "Dest"
+            ],
+            "dashArray": "3,3",
+            "color": "purple",
+            "args": [
+                {
+                    "role": "Destructor",
+                    "targets": [
+                        "Person",
+                        "Object"
+                    ]
+                },
+                {
+                    "role": "Destroyed",
+                    "targets": [
+                        "Person",
+                        "Object"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Friend",
+            "labels": [
+                "Friend",
+                "Fr"
+            ],
+            "dashArray": "3,3",
+            "color": "purple",
+            "attributes": [
+                "RelConfidence",
+                "Safe"
+            ],
+            "args": [
+                {
+                    "role": "From",
+                    "targets": [
+                        "Person"
+                    ]
+                },
+                {
+                    "role": "To",
+                    "targets": [
+                        "Person"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Ennemy",
+            "labels": [
+                "Ennemy",
+                "Enn"
+            ],
+            "dashArray": "3,3",
+            "color": "purple",
+            "args": [
+                {
+                    "role": "From",
+                    "targets": [
+                        "Person"
+                    ]
+                },
+                {
+                    "role": "To",
+                    "targets": [
+                        "Person"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Perpetrator",
+            "labels": [
+                "Perpetrator",
+                "Perp"
+            ],
+            "dashArray": "3,3",
+            "color": "purple",
+            "args": [
+                {
+                    "role": "From",
+                    "targets": [
+                        "Assassination"
+                    ]
+                },
+                {
+                    "role": "To",
+                    "targets": [
+                        "Person"
+                    ]
+                }
+            ]
+        }
+    ],
+    "event_types": [
+        {
+            "name": "Assassination",
+            "type": "Assassination",
+            "labels": [
+                "Assassination",
+                "Assas"
+            ],
+            "bgColor": "lightgreen",
+            "borderColor": "darken",
+            "attributes": [
+                "Epic"
+            ],
+            "children": [],
+            "unused": false,
+            "arcs": [
+                {
+                    "type": "Victim",
+                    "labels": [
+                        "Victim",
+                        "Vict"
+                    ],
+                    "targets": [
+                        "Person"
+                    ]
+                },
+                {
+                    "type": "Perpetrator",
+                    "labels": [
+                        "Perpetrator",
+                        "Perp"
+                    ],
+                    "targets": [
+                        "Person"
+                    ],
+                    "color": "green"
+                }
+            ]
+        },
+        {
+            "name": "Bomb",
+            "type": "Bomb",
+            "labels": [
+                "Bomb",
+                "Bomb"
+            ],
+            "bgColor": "gold",
+            "borderColor": "darken",
+            "attributes": [
+                "BombType"
+            ],
+            "children": [],
+            "unused": false,
+            "arcs": [
+                {
+                    "type": "Destroyed",
+                    "labels": [
+                        "Destroyed",
+                        "Dest"
+                    ],
+                    "color": "gold"
+                }
+            ]
+        },
+        {
+            "name": "Resurrection",
+            "type": "Resurrection",
+            "labels": [
+                "Resurrection",
+                "Resur"
+            ],
+            "bgColor": "magenta",
+            "borderColor": "darken",
+            "attributes": [
+                "Epic",
+                "Confidence"
+            ],
+            "children": [],
+            "unused": false,
+            "arcs": [
+                {
+                    "type": "Resurrected",
+                    "labels": [
+                        "Resurrected",
+                        "Resur"
+                    ],
+                    "color": "magenta"
+                },
+                {
+                    "type": "Savior",
+                    "labels": [
+                        "Savior",
+                        "Sav"
+                    ],
+                    "color": "magenta"
+                }
+            ]
+        }
+    ]
+}
