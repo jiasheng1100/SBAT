@@ -2,22 +2,23 @@ import { BratFrontendEditor } from "./client/src/Brat.js"
 import { Octokit } from "https://esm.sh/octokit@2.1.0";
 
 // get DOM elements
-let patArea = document.getElementById('patArea')
-let branchSelectArea = document.getElementById('branchSelectArea')
-let fileSelectArea = document.getElementById('fileSelectArea')
+let patArea = document.getElementById('patArea');
+let branchSelectArea = document.getElementById('branchSelectArea');
+let fileSelectArea = document.getElementById('fileSelectArea');
 let personalAccessToken = document.getElementById('personalAccessToken');
 let authenticationButton = document.getElementById('authenticationButton');
 let branchSelect = document.getElementById('branchSelect');
 let branchSelectButton = document.getElementById('branchSelectButton');
 let fileSelect = document.getElementById('fileSelect');
 let fileSelectButton = document.getElementById('fileSelectButton');
-let commitArea = document.getElementById('commitArea')
+let commitArea = document.getElementById('commitArea');
 let commitConfirmButton = document.getElementById('commitConfirmButton');
 let bratArea = document.getElementById('bratArea');
 let showDocButton = document.getElementById('showDocButton');
 let commitMessage = document.getElementById('commitMessage');
 let filePathArea = document.getElementById('filePathArea');
-let filePathInfo = document.getElementById('filePathInfo')
+let filePathInfo = document.getElementById('filePathInfo');
+let message = document.getElementById('message');
 
 // initialize variables
 let pat;
@@ -31,12 +32,18 @@ let brat;
 let repoName;
 let repoOwner;
 let collData;
-// annotated text shown in the start page
+
+// pre-define annotated text shown in the start page
 let docData = {
-    "messages": [], "source_files": ["txt"], "modifications": [], "normalizations": [], "ctime": 0, "text": "This is an example of how your annotation will look like.\nUpload a txt or json file to start annotating your own text.\nDouble-click or select any span to add your annotation.",
-    "entities": [["N1", "Object", [[11, 18]]], ["N2", "Child", [[67, 70]]], ["N3", "Baby", [[74, 78]]]], "attributes": [], "relations": [], "triggers": [["T1", "Assassination", [[119, 131]]], ["T2", "Bomb", [[135, 141]]]], "events": [["E1", "T1", []], ["E2", "T2", []]], "comments": [],
-    "collection": null, "equivs": [], "sentence_offsets": [[0, 57], [58, 118], [119, 174]], "token_offsets": [[0, 4], [5, 7], [8, 10], [11, 18], [19, 21], [22, 25], [26, 30], [31, 41], [42, 46], [47, 51], [52, 57], [58, 64], [65, 66], [67, 70], [71, 73], [74, 78], [79, 83], [84, 86],
-    [87, 92], [93, 103], [104, 108], [109, 112], [113, 118], [119, 131], [132, 134], [135, 141], [142, 145], [146, 150], [151, 153], [154, 157], [158, 162], [163, 174]]
+    "messages": [], "source_files": ["txt"], "modifications": [], "normalizations": [], "ctime": 0, "text": "This is an example of how your annotations will look.\nDouble-click or drag to select a span of characters to add your annotation.\nStart annotating your own data by authenticating with your GitHub Personal Access Token.\nThe repository name, owner, file path and branch can be specified in config.json.\n",
+    "entities": [["N1", "Object", [[31, 42]]], ["N2", "Person", [[240, 245]]], ["N3", "Object", [[189, 195]]],
+    ["N4", "Object", [[196, 217]]], ["N5", "Person", [[113, 117]]]], "attributes": [], "relations": [], "triggers": [],
+    "events": [], "comments": [], "equivs": [], "sentence_offsets": [[0, 53], [54, 129], [130, 218], [219, 300]],
+    "token_offsets": [[0, 4], [5, 7], [8, 10], [11, 18], [19, 21], [22, 25], [26, 30], [31, 42], [43, 47], [48, 53],
+    [54, 66], [67, 69], [70, 74], [75, 77], [78, 84], [85, 86], [87, 91], [92, 94], [95, 105], [106, 108], [109, 112], [113, 117], [118, 129],
+    [130, 135], [136, 146], [147, 151], [152, 155], [156, 160], [161, 163], [164, 178], [179, 183], [184, 188], [189, 195],
+    [196, 204], [205, 211], [212, 218], [219, 222], [223, 233], [234, 239], [240, 246], [247, 251], [252, 256], [257, 260],
+    [261, 267], [268, 271], [272, 274], [275, 284], [285, 287], [288, 300]]
 }
 
 // hide unwanted areas in the beginning
@@ -246,7 +253,7 @@ async function getBranchFiles() {
             file path: /\n
             branch: ${branch}\n
             error message: ${error}\n
-            Hint: if all information is correct, it could be that you do not have permission to access the branch
+            Note: Please also check if you have permission to access the branch or if your Personal Access Token is still valid
             `)
     }
 }
@@ -281,7 +288,7 @@ async function getFileContent() {
             file path: ${fileName}\n
             branch: ${branch}\n
             error message: ${error}\n
-            Hint: if all information is correct, it could be that the file does not exist anymore or you do not have permission to access the file
+            Note: Please also check if you have permission to access the file or if your Personal Access Token is still valid
             `)
     }
     commitArea.hidden = false;
@@ -387,12 +394,17 @@ async function pushCommit() {
 
         console.log('new commit creation successful!');
 
-
+        // Display successful message for 5 seconds
+        message.innerHTML = "commit successful!";
+        setTimeout(function () {
+            message.innerHTML = '';
+        }, 5000);
     } catch (error) {
-        window.alert('Error pushing new commit:', error);
+        window.alert(`Error pushing new commit\n Error message: ${error}`);
     }
 }
 
+// log doc data for debugging
 showDocButton.addEventListener('click', () => console.log(docData));
 
 /* Implementation of uploading and downloading local file:
