@@ -90,10 +90,10 @@ fetch('./config.json')
     prompting and authenticate the user with the saved pat right away */
     .then(() => {
         if (localStorage.getItem("personalAccessToken") != null) {
-            personalAccessToken.value = localStorage.getItem("personalAccessToken")
+            console.log("personal access token found in local storage");
+            personalAccessToken.value = localStorage.getItem("personalAccessToken");
             patArea.hidden = true;
             authenticationButtonClicked();
-            console.log("personal access token found in local storage")
         }
     })
     .catch((err) => window.alert(`error initializing annotation editor: ${err}`))
@@ -235,7 +235,9 @@ async function getBranchFiles() {
     and directly get file content */
     if (fileName) { getFileContent() };
     try {
-        branch = branchSelect.value
+        if (!branch) {
+            branch = branchSelect.value;
+        };
         const response = await octokit.rest.repos.getContent({
             owner: repoOwner,
             repo: repoName,
