@@ -102,6 +102,11 @@ textarea {
     padding: 25px;
 }
 
+#message {
+    text-align: center;
+    font-size: 20px;
+}
+
 .block {
     margin: 10px 5px 10px 5px;
 }

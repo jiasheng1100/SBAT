@@ -2,8 +2,8 @@
     "admin_config": {
         "repoName": "test-github-commit",
         "repoOwner": "jiasheng1100",
-        "filePath": "folder1/folder3/example.json",
-        "branch": "main"
+        "branch": "main",
+        "filePath": "folder1/folder3/example.json"
     },
     "messages": [],
     "items": [],

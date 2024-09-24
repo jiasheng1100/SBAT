@@ -16,8 +16,6 @@ let commitConfirmButton = document.getElementById('commitConfirmButton');
 let bratArea = document.getElementById('bratArea');
 let showDocButton = document.getElementById('showDocButton');
 let commitMessage = document.getElementById('commitMessage');
-let filePathArea = document.getElementById('filePathArea');
-let filePathInfo = document.getElementById('filePathInfo');
 let message = document.getElementById('message');
 
 // initialize variables
@@ -51,7 +49,6 @@ branchSelectArea.hidden = true;
 fileSelectArea.hidden = true;
 commitArea.hidden = true;
 showDocButton.hidden = true;
-filePathArea.hidden = true;
 
 // attach event listener to buttons
 authenticationButton.addEventListener('click', authenticationButtonClicked);
@@ -144,10 +141,24 @@ function loadJson(data) {
 
 // use the dispatcher to update the content to display in Brat editor
 function updateBratEditor() {
-    if (brat) {
-        brat.dispatcher.post('requestRenderData', [docData]);
-        brat.dispatcher.post('current', [collData, docData, {}]);
+    try {
+        if (brat) {
+            brat.dispatcher.post('requestRenderData', [docData]);
+            brat.dispatcher.post('current', [collData, docData, {}]);
+        }
+
+        // Display successful message for 5 seconds
+        message.innerHTML = `Sucessfully loaded file content:<br/>${repoName}/${fileName}, branch ${branch}`;
+        setTimeout(function () {
+            message.innerHTML = '';
+        }, 5000);
     }
+    catch (error) {
+        window.alert(`Error updating Brat editor\n
+            error message: ${error}
+            `)
+    }
+
 }
 
 /* retrieve all existing branches of the given repository
@@ -294,8 +305,6 @@ async function getFileContent() {
             `)
     }
     commitArea.hidden = false;
-    filePathArea.hidden = false;
-    filePathInfo.value = repoName + "/" + fileName + `\nbranch ${branch}`
 }
 
 // function to check if a string is in json format
@@ -311,6 +320,20 @@ const extractJSON = (str) => {
 // commit the annotations and push to repository
 async function pushCommit() {
     try {
+        /* prepare for the commit */
+
+        // if current file is not json file, create a new json file with same name
+        if (fileName.length > 0) {
+            if (!fileName.includes(".json")) {
+                fileName = fileName.replace(/\..+/i, ".json")
+            }
+        } else {
+            fileName = "newFile.json"
+        }
+
+        // display message
+        message.innerHTML = `Commiting ${repoName}/${fileName},  branch ${branch}<br/>Please wait :)`;
+
         /* retrieve previous commit */
 
         // get the SHA of the last commit
@@ -341,14 +364,7 @@ async function pushCommit() {
 
         /* create new commit */
 
-        // if current file is not json file, create a new json file with same name
-        if (fileName.length > 0) {
-            if (!fileName.includes(".json")) {
-                fileName = fileName.replace(/\..+/i, ".json")
-            }
-        } else {
-            fileName = "newFile.json"
-        }
+        // transform the data into a json string
         const dataAsJSONString = JSON.stringify(docData, null, "\t");
 
         // find if the file already exists in the tree
@@ -397,11 +413,12 @@ async function pushCommit() {
         console.log('new commit creation successful!');
 
         // Display successful message for 5 seconds
-        message.innerHTML = "commit successful!";
+        message.innerHTML = `Commit successful!<br/>See ${repoName}/${fileName}, branch ${branch}`;
         setTimeout(function () {
             message.innerHTML = '';
         }, 5000);
     } catch (error) {
+        message.innerHTML = '';
         window.alert(`Error pushing new commit\n Error message: ${error}`);
     }
 }
