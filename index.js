@@ -11,7 +11,6 @@ let branchSelect = document.getElementById('branchSelect');
 let branchSelectButton = document.getElementById('branchSelectButton');
 let fileSelect = document.getElementById('fileSelect');
 let fileSelectButton = document.getElementById('fileSelectButton');
-let commitArea = document.getElementById('commitArea');
 let commitConfirmButton = document.getElementById('commitConfirmButton');
 let bratArea = document.getElementById('bratArea');
 let showDocButton = document.getElementById('showDocButton');
@@ -44,11 +43,12 @@ let docData = {
     [261, 267], [268, 271], [272, 274], [275, 284], [285, 287], [288, 300]]
 }
 
-// hide unwanted areas in the beginning
+// hide in the start elements which will needed later 
 branchSelectArea.hidden = true;
 fileSelectArea.hidden = true;
-commitArea.hidden = true;
 showDocButton.hidden = true;
+commitMessage.hidden = true;
+commitConfirmButton.hidden = true;
 
 // attach event listener to buttons
 authenticationButton.addEventListener('click', authenticationButtonClicked);
@@ -294,6 +294,8 @@ async function getFileContent() {
         }
         fileSelectArea.hidden = true;
         bratArea.hidden = false;
+        commitMessage.hidden = false;
+        commitConfirmButton.hidden = false;
     } catch (error) {
         window.alert(`Error fetching file content, please check if the following information is correct:\n
             repository owner: ${repoOwner}\n
@@ -304,7 +306,6 @@ async function getFileContent() {
             Note: Please also check if you have permission to access the file or if your Personal Access Token is still valid
             `)
     }
-    commitArea.hidden = false;
 }
 
 // function to check if a string is in json format
@@ -332,7 +333,7 @@ async function pushCommit() {
         }
 
         // display message
-        message.innerHTML = `Commiting ${repoName}/${fileName},  branch ${branch}<br/>Please wait :)`;
+        message.innerHTML = `Committing ${repoName}/${fileName},  branch ${branch}<br/>Please wait :)`;
 
         /* retrieve previous commit */
 
